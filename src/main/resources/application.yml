@@ -1,0 +1,15 @@
+server:
+  port: 8092
+  servlet:
+    context-path: /blog
+
+spring:
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    password: 'vincent2017727'
+    url: jdbc:mysql://localhost:3306/gptDB?serverTimezone=UTC
+    username: 'root'
