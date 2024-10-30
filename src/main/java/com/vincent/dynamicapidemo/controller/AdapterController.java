@@ -58,57 +58,50 @@ public class AdapterController {
         RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
 
         List<RegisterMappingInfo> existingMappings = registerMappingInfoService.getExistingMappingInfo();
-        if (existingMappings != null) {
+        if (!existingMappings.isEmpty()) {
             registerMappingInfoList.addAll(existingMappings);
+            // 遍历所有的映射关系并进行处理
+            for (RegisterMappingInfo registerMappingInfo : registerMappingInfoList) {
+
+                // method with parameters
+                if (registerMappingInfo.getParams() != null) {
+                    String paramString = registerMappingInfo.getParams();
+                    String[] params = paramString.split(",");
+                    int size = params.length;
+                    // 动态创建参数类型数组
+                    Class<?>[] paramTypes = new Class<?>[size];
+                    // 根据 params 数组中每个参数的类型来设置 paramTypes
+                    // 您可以根据具体的需求来调整
+                    Arrays.fill(paramTypes, String.class);
+                    RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(registerMappingInfo.getPaths())
+                            .methods(registerMappingInfo.getMethods())
+                            .params(params)
+                            .build();
+
+                    bean.registerMapping(requestMappingInfo, registerMappingInfo.getHandler(), AdapterController.class.getDeclaredMethod(registerMappingInfo.getTargetMethodName(), paramTypes));
+                } else {
+                    // method without parameters
+                    RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(registerMappingInfo.getPaths()).methods(registerMappingInfo.getMethods()).build();
+
+                    bean.registerMapping(requestMappingInfo, registerMappingInfo.getHandler(), AdapterController.class.getDeclaredMethod(registerMappingInfo.getTargetMethodName()));
+
+
+                }
+            }
             System.out.println("Successfully loaded register mappings from database.");
         } else {
-            System.err.println("No register mappings found in the database.");
+            System.out.println("No register mappings found in the database.");
         }
 
-        // 遍历所有的映射关系并进行处理
-        for (RegisterMappingInfo registerMappingInfo : registerMappingInfoList) {
-
-            // method with parameters
-            if (registerMappingInfo.getParams() != null) {
-                String paramString = registerMappingInfo.getParams();
-                String[] params = paramString.split(",");
-                int size = params.length;
-                // 动态创建参数类型数组
-                Class<?>[] paramTypes = new Class<?>[size];
-                // 根据 params 数组中每个参数的类型来设置 paramTypes
-                // 您可以根据具体的需求来调整
-                Arrays.fill(paramTypes, String.class);
-                RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(registerMappingInfo.getPaths())
-                        .methods(registerMappingInfo.getMethods())
-                        .params(params)
-                        .build();
-
-                bean.registerMapping(requestMappingInfo, registerMappingInfo.getHandler(), AdapterController.class.getDeclaredMethod(registerMappingInfo.getTargetMethodName(), paramTypes));
-            } else {
-                // method without parameters
-                RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(registerMappingInfo.getPaths()).methods(registerMappingInfo.getMethods()).build();
-
-                bean.registerMapping(requestMappingInfo, registerMappingInfo.getHandler(), AdapterController.class.getDeclaredMethod(registerMappingInfo.getTargetMethodName()));
-
-            }
-        }
     }
 
-    @Autowired
-    private DynamicSqlMapper dynamicSqlMapper;
+
     @GetMapping("/index")
     public String index(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) {
         // 获取完整的请求 URL
         String fullUrl = request.getRequestURL().toString();
         System.out.println("Full URL: " + fullUrl);
 
-        try {
-            List<Map<String, Object>> results = dynamicSqlMapper.executeDynamicSql(createApiDTO.getSql());
-            System.out.println(results);
-        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("SQL execution failed: " + e.getMessage());
-        }
-//        return ResponseEntity.ok(results);
         return "常规API测试" ;
     }
     @GetMapping("/ttt")
@@ -126,64 +119,7 @@ public class AdapterController {
     public List<RegisterMappingInfo> index2() {
         return registerMappingInfoService.getExistingMappingInfo();
     }
-    @PostMapping("/api/create1")
-    public String create111(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) throws NoSuchMethodException {
-        String type = createApiDTO.getSourceType();
-        String path = createApiDTO.getPath();
-        String url = request.getRequestURL().append(path).toString();
-        String method = createApiDTO.getMethod();
-//        String[][] params = createApiDTO.getParams();
-        String sqlStr = createApiDTO.getSql();
-        System.out.println(createApiDTO.toString());
 
-        String targetMethodName;
-        if ("sql".equals(type)) {
-            targetMethodName = "dynamicApiMethodSQL111";
-        } else if ("table".equals(type)) {
-            targetMethodName = "dynamicApiMethodTable";
-        } else if ("jar".equals(type)) {
-            targetMethodName = "dynamicApiMethodJar";
-        } else {
-            targetMethodName = "";
-            return "Illegal source type";
-        }
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        // 无参get方法
-        if (createApiDTO.getParams() != null) {
-
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
-                    .methods(RequestMethod.valueOf(method))
-//                    .params("params")
-                    .build();
-
-            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName, Object.class));
-        } else {
-            // method without parameters
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
-                    .methods(RequestMethod.valueOf(method))
-                    .build();
-
-            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName));
-
-        }
-
-        // save new binding to database
-        RegisterMappingInfo registerMappingInfo = new RegisterMappingInfo();
-        registerMappingInfo.setPaths(path);
-        registerMappingInfo.setMethods(RequestMethod.GET);
-        registerMappingInfo.setHandler("adapterController");
-        registerMappingInfo.setTargetMethodName(targetMethodName);
-        registerMappingInfo.setSql(sqlStr);
-        registerMappingInfo.setUrl(url);
-        // update it to database
-        registerMappingInfoService.saveMappingInfo(registerMappingInfo);
-
-        return "success";
-    }
-    Object dynamicApiMethodSQL111(@RequestBody Object params){
-        System.out.println(params.toString());
-        return params.toString();
-    }
 
     @PostMapping("/api/create")
     public String create(@RequestBody CreateApiDTO createApiDTO) throws NoSuchMethodException {
