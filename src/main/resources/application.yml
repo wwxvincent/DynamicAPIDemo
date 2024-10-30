@@ -1,7 +1,7 @@
 server:
   port: 8092
   servlet:
-    context-path: /blog
+    context-path: /vincent
 
 spring:
   mvc:

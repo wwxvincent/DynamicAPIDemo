@@ -26,4 +26,6 @@ public class RegisterMappingInfo {
     private RequestMethod methods;
     private String handler;
     private String targetMethodName;
+    private String sql;
+    private String url;
 }

@@ -2,9 +2,11 @@ package com.vincent.dynamicapidemo.controller;
 
 //import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
 import com.vincent.dynamicapidemo.entity.RegisterMapping;
 import com.vincent.dynamicapidemo.entity.RegisterMappingInfo;
 import com.vincent.dynamicapidemo.entity.User;
+import com.vincent.dynamicapidemo.mapper.DynamicSqlMapper;
 import com.vincent.dynamicapidemo.service.RegisterMappingInfoService;
 import com.vincent.dynamicapidemo.service.UserService;
 import net.sf.json.JSONArray;
@@ -12,20 +14,17 @@ import net.sf.json.JSONObject;
 //import com.fasterxml.jackson.databind.util.JSONPObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
@@ -95,14 +94,153 @@ public class AdapterController {
         }
     }
 
+    @Autowired
+    private DynamicSqlMapper dynamicSqlMapper;
     @GetMapping("/index")
-    public String index() {
-        return "常规API测试";
+    public String index(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) {
+        // 获取完整的请求 URL
+        String fullUrl = request.getRequestURL().toString();
+        System.out.println("Full URL: " + fullUrl);
+
+        try {
+            List<Map<String, Object>> results = dynamicSqlMapper.executeDynamicSql(createApiDTO.getSql());
+            System.out.println(results);
+        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("SQL execution failed: " + e.getMessage());
+        }
+//        return ResponseEntity.ok(results);
+        return "常规API测试" ;
+    }
+    @GetMapping("/ttt")
+    Object objTest(@RequestParam Object[] params){
+        System.out.println(Arrays.toString(params));
+        return Arrays.toString(params);
+    }
+    @GetMapping("/tttt")
+    Object objTest2(@RequestParam Object... params){
+        System.out.println(Arrays.toString(params));
+        return Arrays.toString(params);
     }
 
     @GetMapping("/index2")
     public List<RegisterMappingInfo> index2() {
         return registerMappingInfoService.getExistingMappingInfo();
+    }
+    @PostMapping("/api/create1")
+    public String create111(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) throws NoSuchMethodException {
+        String type = createApiDTO.getSourceType();
+        String path = createApiDTO.getPath();
+        String url = request.getRequestURL().append(path).toString();
+        String method = createApiDTO.getMethod();
+//        String[][] params = createApiDTO.getParams();
+        String sqlStr = createApiDTO.getSql();
+        System.out.println(createApiDTO.toString());
+
+        String targetMethodName;
+        if ("sql".equals(type)) {
+            targetMethodName = "dynamicApiMethodSQL111";
+        } else if ("table".equals(type)) {
+            targetMethodName = "dynamicApiMethodTable";
+        } else if ("jar".equals(type)) {
+            targetMethodName = "dynamicApiMethodJar";
+        } else {
+            targetMethodName = "";
+            return "Illegal source type";
+        }
+        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+        // 无参get方法
+        if (createApiDTO.getParams() != null) {
+
+            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
+                    .methods(RequestMethod.valueOf(method))
+//                    .params("params")
+                    .build();
+
+            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName, Object.class));
+        } else {
+            // method without parameters
+            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
+                    .methods(RequestMethod.valueOf(method))
+                    .build();
+
+            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName));
+
+        }
+
+        // save new binding to database
+        RegisterMappingInfo registerMappingInfo = new RegisterMappingInfo();
+        registerMappingInfo.setPaths(path);
+        registerMappingInfo.setMethods(RequestMethod.GET);
+        registerMappingInfo.setHandler("adapterController");
+        registerMappingInfo.setTargetMethodName(targetMethodName);
+        registerMappingInfo.setSql(sqlStr);
+        registerMappingInfo.setUrl(url);
+        // update it to database
+        registerMappingInfoService.saveMappingInfo(registerMappingInfo);
+
+        return "success";
+    }
+    Object dynamicApiMethodSQL111(@RequestBody Object params){
+        System.out.println(params.toString());
+        return params.toString();
+    }
+
+    @PostMapping("/api/create")
+    public String create(@RequestBody CreateApiDTO createApiDTO) throws NoSuchMethodException {
+        String type = createApiDTO.getSourceType();
+        String path = createApiDTO.getPath();
+        String method = createApiDTO.getMethod();
+//        String[][] params = createApiDTO.getParams();
+        String sqlStr = createApiDTO.getSql();
+        System.out.println(createApiDTO.toString());
+
+        String targetMethodName;
+        if ("sql".equals(type)) {
+            targetMethodName = "dynamicApiMethodSQL";
+        } else if ("table".equals(type)) {
+            targetMethodName = "dynamicApiMethodTable";
+        } else if ("jar".equals(type)) {
+            targetMethodName = "dynamicApiMethodJar";
+        } else {
+            targetMethodName = "";
+            return "Illegal source type";
+        }
+        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+        // 无参get方法
+
+        if (createApiDTO.getParams() != null) {
+            String[][] paramsCollection = createApiDTO.getParams();
+            int size = paramsCollection[0].length;
+            // 动态创建参数类型数组
+            Class<?>[] paramTypes = new Class<?>[size];
+            // 根据 params 数组中每个参数的类型来设置 paramTypes
+            // 您可以根据具体的需求来调整
+            String[] params = new String[size];
+            for(int i = 0; i < size; i++) {
+                params[i] = paramsCollection[i][0];
+            }
+//            Arrays.fill(params, "params");
+            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
+                    .methods(RequestMethod.valueOf(method))
+                    .params(params)
+                    .build();
+
+            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName, Object[].class));
+        } else {
+            // method without parameters
+            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
+                    .methods(RequestMethod.valueOf(method))
+                    .build();
+
+            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName));
+
+        }
+
+        return "success";
+    }
+    Object dynamicApiMethodSQL(@RequestParam Object... params){
+        System.out.println(Arrays.toString(params));
+        return null;
     }
 
     @GetMapping("/create1")
@@ -131,8 +269,8 @@ public class AdapterController {
                 .params("fileName")
                 .methods(RequestMethod.GET).build();
         bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("myTest2", String.class));
-
-        return "success to create and reload createRestApi()";
+        String url= requestMappingInfo.getDirectPaths().toString();
+        return "success to create and reload createRestApi() "+ url;
     }
     @GetMapping("/create3")
     public String create3() throws NoSuchMethodException {

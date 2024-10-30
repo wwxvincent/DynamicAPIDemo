@@ -19,6 +19,8 @@ public interface RegisterMappingInfoMapper {
     List<RegisterMappingInfo> getAllInfo();
 
 
-    @Insert("INSERT INTO dynamic_mapping_info (paths, params, methods, handler, targetMethodName) VALUES (#{paths}, #{params}, #{methods}, #{handler}, #{targetMethodName})")
+    @Insert("INSERT INTO dynamic_mapping_info (`paths`, `params`, `methods`, `handler`, `targetMethodName`, `sql`, `url`) " +
+            "VALUES (#{paths}, #{params}, #{methods}, #{handler}, #{targetMethodName}, #{sql}, #{url})")
     int saveMappingInfo(RegisterMappingInfo registerMappingInfo);
+
 }
