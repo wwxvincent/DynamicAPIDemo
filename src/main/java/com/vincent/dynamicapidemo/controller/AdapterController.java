@@ -180,7 +180,7 @@ public class AdapterController {
     }
 
     @GetMapping("/create1")
-    public String create1() throws NoSuchMethodException {
+    public String create1(HttpServletRequest request) throws NoSuchMethodException {
         RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
         // 无参get方法
         RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths("/test1").methods(RequestMethod.GET).build();
@@ -192,10 +192,11 @@ public class AdapterController {
         registerMappingInfo.setMethods(RequestMethod.GET);
         registerMappingInfo.setHandler("adapterController");
         registerMappingInfo.setTargetMethodName("myTest");
+        registerMappingInfo.setSql("select * from user");
+        registerMappingInfo.setUrl( request.getRequestURL().toString());
         // update it to database
         registerMappingInfoService.saveMappingInfo(registerMappingInfo);
-
-        return "success to create and reload createRestApi()";
+        return "success to create and reload createRestApi()  " + request.getRequestURL().toString() ;
     }
     @GetMapping("/create2")
     public String create2() throws NoSuchMethodException {
