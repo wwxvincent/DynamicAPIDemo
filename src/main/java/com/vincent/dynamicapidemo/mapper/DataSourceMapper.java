@@ -16,4 +16,7 @@ public interface DataSourceMapper {
 
     @Select("SELECT * FROM database_source_config")
     List<DataSource> getDatabaseSourceConfig();
+
+    @Select("SELECT * FROM database_source_config where datasource_id = #{datasourceId}")
+    DataSource getDatabaseSourceConfigById(String datasourceId);
 }

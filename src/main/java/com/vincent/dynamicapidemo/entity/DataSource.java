@@ -16,9 +16,11 @@ import lombok.ToString;
 @NoArgsConstructor
 public class DataSource {
     String datasourceId;
+    String datasourceName;
     String url;
     String userName;
     String passWord;
+    String className;
     String code;
     String dataBaseType;
 }

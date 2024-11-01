@@ -19,5 +19,7 @@ public class CreateApiDTO {
     String[][] params;
     String sourceType;
     String sql;
+    String sourceId;
+    String[] jdbcParamValues;
 
 }

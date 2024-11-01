@@ -2,11 +2,13 @@ package com.vincent.dynamicapidemo.controller;
 
 //import com.fasterxml.jackson.databind.util.JSONPObject;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vincent.dynamicapidemo.common.ResponseDTO;
 import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
 import com.vincent.dynamicapidemo.entity.RegisterMapping;
 import com.vincent.dynamicapidemo.entity.RegisterMappingInfo;
 import com.vincent.dynamicapidemo.entity.User;
 import com.vincent.dynamicapidemo.mapper.DynamicSqlMapper;
+import com.vincent.dynamicapidemo.service.JDBCService;
 import com.vincent.dynamicapidemo.service.RegisterMappingInfoService;
 import com.vincent.dynamicapidemo.service.UserService;
 import net.sf.json.JSONArray;
@@ -45,10 +47,16 @@ public class AdapterController {
     private RegisterMappingInfoService registerMappingInfoService;
 
     @Autowired
+    private JDBCService jdbcService;
+
+    @Autowired
     public AdapterController(WebApplicationContext applicationContext) throws NoSuchMethodException {
         this.applicationContext = applicationContext;
 
     }
+
+
+
 
     @PostConstruct
     public void init() throws NoSuchMethodException {
@@ -120,6 +128,26 @@ public class AdapterController {
         return registerMappingInfoService.getExistingMappingInfo();
     }
 
+
+    public ResponseDTO getDataFromDiffDBSource(@RequestBody CreateApiDTO createApiDTO) {
+        System.out.println("getgetgetgetgetgetget");
+        return jdbcService.getDataFromDiffDBSource(createApiDTO);
+    }
+    @PostMapping("/api/createJDBC")
+    public String createJDBC(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) throws NoSuchMethodException {
+
+        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(createApiDTO.getPath())
+                .methods(RequestMethod.valueOf(createApiDTO.getMethod()))
+                .build();
+
+        bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("getDataFromDiffDBSource", CreateApiDTO.class));
+
+
+        // 构建完整的 URL
+        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + createApiDTO.getPath();
+
+    }
 
     @PostMapping("/api/create")
     public String create(@RequestBody CreateApiDTO createApiDTO) throws NoSuchMethodException {
