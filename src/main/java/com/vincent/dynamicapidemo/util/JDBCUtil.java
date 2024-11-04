@@ -4,7 +4,7 @@ import com.alibaba.druid.pool.DruidPooledConnection;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.druid.util.JdbcConstants;
-import com.vincent.dynamicapidemo.common.ResponseDTO;
+import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
 import com.vincent.dynamicapidemo.entity.DataSource;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +50,7 @@ public class JDBCUtil {
         return connection;
     }
 
-    public static ResponseDTO executeSqlPool(DataSource datasource, String sql, List<Object> jdbcParamValues) throws SQLException {
+    public static ResponseVO executeSqlPool(DataSource datasource, String sql, List<Object> jdbcParamValues) throws SQLException {
         log.debug(sql);
 //        log.debug(JSON.toJSONString(jdbcParamValues));
         DruidPooledConnection connection = null;
@@ -87,14 +87,14 @@ public class JDBCUtil {
                     });
                     list.add(object);
                 }
-                return ResponseDTO.apiSuccess(list);
+                return ResponseVO.apiSuccess(list);
             } else {
                 int updateCount = preparedStatement.getUpdateCount();
-                return ResponseDTO.apiSuccess("sql修改数据行数："+updateCount);
+                return ResponseVO.apiSuccess("sql修改数据行数："+updateCount);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseDTO.fail(e.getMessage());
+            return ResponseVO.fail(e.getMessage());
         } finally {
             try {
                 if (connection != null) {
@@ -106,7 +106,7 @@ public class JDBCUtil {
         }
     }
 
-    public static ResponseDTO executeSql(DataSource dataSource, String sql, List<Object> jdbcParamValues) throws SQLException, ClassNotFoundException {
+    public static ResponseVO executeSql(DataSource dataSource, String sql, List<Object> jdbcParamValues) throws SQLException, ClassNotFoundException {
         log.debug(sql);
         log.debug(JSON.toJSONString(jdbcParamValues));
         Connection connection = JDBCUtil.getConnection(dataSource);
@@ -145,14 +145,14 @@ public class JDBCUtil {
                     });
                     list.add(object);
                 }
-                return ResponseDTO.apiSuccess(list);
+                return ResponseVO.apiSuccess(list);
             } else {
                 int updateCount = preparedStatement.getUpdateCount();
-                return ResponseDTO.apiSuccess("sql修改数据行数："+updateCount);
+                return ResponseVO.apiSuccess("sql修改数据行数："+updateCount);
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseDTO.fail(e.getMessage());
+            return ResponseVO.fail(e.getMessage());
         } finally {
             // 关闭ResultSet
 //            if (resultSet != null) {

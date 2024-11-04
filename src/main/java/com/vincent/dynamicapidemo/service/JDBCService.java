@@ -1,6 +1,7 @@
 package com.vincent.dynamicapidemo.service;
 
-import com.vincent.dynamicapidemo.common.ResponseDTO;
+import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
+import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
 import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
 
 /**
@@ -11,5 +12,5 @@ import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
 public interface JDBCService {
     Object getDataFromDiffDBSource1(CreateApiDTO createApiDTO);
 
-    ResponseDTO getDataFromDiffDBSource(CreateApiDTO createApiDTO);
+    ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO);
 }

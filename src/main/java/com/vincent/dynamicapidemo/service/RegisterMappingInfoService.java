@@ -1,6 +1,6 @@
 package com.vincent.dynamicapidemo.service;
 
-import com.vincent.dynamicapidemo.entity.RegisterMappingInfo;
+import com.vincent.dynamicapidemo.entity.DynamicAPIMappingInfo;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
  */
 public interface RegisterMappingInfoService {
 
-    List<RegisterMappingInfo> getExistingMappingInfo();
+    List<DynamicAPIMappingInfo> getExistingMappingInfo();
 
-    int saveMappingInfo(RegisterMappingInfo registerMappingInfo);
+    int saveMappingInfo(DynamicAPIMappingInfo dynamicAPIMappingInfo);
 }

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * @Author: Vincent(Wenxuan) Wang
  * @Date: 10/24/24
@@ -14,12 +16,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class CreateApiDTO {
 
+    String APIName;
+    String APIWorkArea;
     String path;
     String method;
-    String[][] params;
     String sourceType;
-    String sql;
-    String sourceId;
-    String[] jdbcParamValues;
+    String sourceDatabase;
+    String sourceTable;
+    List<Object> selectList;
+    List<Object> fixedWhereList;
+    List<Object> optionalWhereList;
 
 }

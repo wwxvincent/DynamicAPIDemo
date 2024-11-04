@@ -1,11 +1,11 @@
-package com.vincent.dynamicapidemo.common;
+package com.vincent.dynamicapidemo.entity.VO;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
  * @Date: 11/1/24
  * @Description:
  */
-public class ResponseDTO {
+public class ResponseVO {
     String msg;
     Object data;
     boolean success;
@@ -34,8 +34,8 @@ public class ResponseDTO {
         this.success = success;
     }
 
-    public static ResponseDTO apiSuccess(Object data) {
-        ResponseDTO dto = new ResponseDTO();
+    public static ResponseVO apiSuccess(Object data) {
+        ResponseVO dto = new ResponseVO();
         dto.setData(data);
         dto.setSuccess(true);
         dto.setMsg("接口访问成功");
@@ -43,23 +43,23 @@ public class ResponseDTO {
 
     }
 
-    public static ResponseDTO successWithMsg(String msg) {
-        ResponseDTO dto = new ResponseDTO();
+    public static ResponseVO successWithMsg(String msg) {
+        ResponseVO dto = new ResponseVO();
         dto.setData(null);
         dto.setSuccess(true);
         dto.setMsg(msg);
         return dto;
     }
 
-    public static ResponseDTO successWithData(Object data) {
-        ResponseDTO dto = new ResponseDTO();
+    public static ResponseVO successWithData(Object data) {
+        ResponseVO dto = new ResponseVO();
         dto.setData(data);
         dto.setSuccess(true);
         return dto;
     }
 
-    public static ResponseDTO fail(String msg) {
-        ResponseDTO dto = new ResponseDTO();
+    public static ResponseVO fail(String msg) {
+        ResponseVO dto = new ResponseVO();
         dto.setSuccess(false);
         dto.setMsg(msg);
         return dto;

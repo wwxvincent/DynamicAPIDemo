@@ -1,8 +1,10 @@
 package com.vincent.dynamicapidemo.entity;
 
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
@@ -19,13 +21,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class RegisterMappingInfo {
+@TableName("dynamic_mapping_info")
+public class DynamicAPIMappingInfo {
     private String id;
-    private String paths;
-    private String params;
     private RequestMethod methods;
     private String handler;
     private String targetMethodName;
-    private String sql;
     private String url;
+    private String datasource_id;
+    private String sqlId;
+    private String path;
+
 }
