@@ -21,6 +21,6 @@ public class DynamicAPIDatasourceConfig {
     private String datasourceUrl;
     private String datasourceUsername;
     private String datasourcePassword;
-    private String datasourceDriverClassName;
+    private String datasourceDriverClassname;
 
 }

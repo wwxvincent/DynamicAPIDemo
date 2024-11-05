@@ -12,5 +12,5 @@ import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
 public interface JDBCService {
     Object getDataFromDiffDBSource1(CreateApiDTO createApiDTO);
 
-    ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO);
+    ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO, String url);
 }

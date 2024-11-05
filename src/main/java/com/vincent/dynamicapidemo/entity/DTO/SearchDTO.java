@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @Author: Vincent(Wenxuan) Wang
  * @Date: 11/2/24
@@ -14,8 +17,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class SearchDTO {
 
-    private String[][] params;
+    private List<Param> paramsList;
 
 
-    private String bindingId;
+    private List<String>selectList;
 }

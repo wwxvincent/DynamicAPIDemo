@@ -24,8 +24,8 @@ public class DynamicAPIMainConfig {
     private String handler;
     private String targetMethodName;
     private String url;
-    private String APIName;
-    private String APIWorkspace;
+    private String apiName;
+    private String apiWorkspace;
     private int databaseDictId;
     private String selectList;
     private String sqlSentence;

@@ -79,6 +79,8 @@ public class AdapterController {
 //
 //    }
 
+
+
     @PostMapping("/api/createJDBC2")
     public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
         try {
@@ -86,7 +88,7 @@ public class AdapterController {
             RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(apiConfig.getPath())
                     .methods(RequestMethod.valueOf(apiConfig.getMethod()))
                     .build();
-            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class));
+            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class, HttpServletRequest.class));
 
             String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
 
@@ -99,8 +101,11 @@ public class AdapterController {
             return "Error: " + e.getMessage();
         }
     }
-    public ResponseVO dynamicApiMethodSQL(@RequestBody SearchDTO searchDTO) {
-        return jdbcService.getDataFromDiffDBSource(searchDTO);
+    public ResponseVO dynamicApiMethodSQL(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
+        String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
+
+
+        return jdbcService.getDataFromDiffDBSource(searchDTO, url);
     }
 
 ////    @PostMapping("/api/createJDBC1")
