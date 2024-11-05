@@ -4,14 +4,13 @@ package com.vincent.dynamicapidemo.controller;
 import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
 import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
 import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
-import com.vincent.dynamicapidemo.entity.DynamicAPIMappingInfo;
+//import com.vincent.dynamicapidemo.entity.DynamicAPIMappingInfo;
+import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
 import com.vincent.dynamicapidemo.service.CreateApiService;
 import com.vincent.dynamicapidemo.service.JDBCService;
-import com.vincent.dynamicapidemo.service.RegisterMappingInfoService;
+//import com.vincent.dynamicapidemo.service.RegisterMappingInfoService;
 import com.vincent.dynamicapidemo.service.UserService;
 //import com.fasterxml.jackson.databind.util.JSONPObject;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.WebApplicationContext;
@@ -33,13 +32,13 @@ public class AdapterController {
 
     private final WebApplicationContext applicationContext;
 
-    private final List<DynamicAPIMappingInfo> dynamicAPIMappingInfoList = new ArrayList<>();
+//    private final List<DynamicAPIMappingInfo> dynamicAPIMappingInfoList = new ArrayList<>();
 
     @Autowired
     private UserService userService;
 
-    @Autowired
-    private RegisterMappingInfoService registerMappingInfoService;
+//    @Autowired
+//    private RegisterMappingInfoService registerMappingInfoService;
 
     @Autowired
     private JDBCService jdbcService;
@@ -55,92 +54,114 @@ public class AdapterController {
 
     @PostConstruct
     public void init() throws NoSuchMethodException {
-        loadExistingMappings();
+//        loadExistingMappings();
     }
-    private void loadExistingMappings() throws NoSuchMethodException {
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+//    private void loadExistingMappings() throws NoSuchMethodException {
+//        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+//
+//        List<DynamicAPIMappingInfo> existingMappings = registerMappingInfoService.getExistingMappingInfo();
+//        if (!existingMappings.isEmpty()) {
+//            dynamicAPIMappingInfoList.addAll(existingMappings);
+//            // 遍历所有的映射关系并进行处理
+//            for (DynamicAPIMappingInfo dynamicAPIMappingInfo : dynamicAPIMappingInfoList) {
+//
+//                RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(dynamicAPIMappingInfo.getPath())
+//                        .methods(dynamicAPIMappingInfo.getMethods())
+//                        .build();
+//                bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class));
+//
+//
+//            }
+//            System.out.println("Successfully loaded register mappings from database.");
+//        } else {
+//            System.out.println("No register mappings found in the database.");
+//        }
+//
+//    }
 
-        List<DynamicAPIMappingInfo> existingMappings = registerMappingInfoService.getExistingMappingInfo();
-        if (!existingMappings.isEmpty()) {
-            dynamicAPIMappingInfoList.addAll(existingMappings);
-            // 遍历所有的映射关系并进行处理
-            for (DynamicAPIMappingInfo dynamicAPIMappingInfo : dynamicAPIMappingInfoList) {
-
-                RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(dynamicAPIMappingInfo.getPath())
-                        .methods(dynamicAPIMappingInfo.getMethods())
-                        .build();
-                bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class));
-
-
-            }
-            System.out.println("Successfully loaded register mappings from database.");
-        } else {
-            System.out.println("No register mappings found in the database.");
-        }
-
-    }
-
-    @PostMapping("/api/createJDBC1")
-    public String createJDBC1(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request)  {
+    @PostMapping("/api/createJDBC2")
+    public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
         try {
             RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(createApiDTO.getPath())
-                .methods(RequestMethod.valueOf(createApiDTO.getMethod()))
-                .build();
+            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(apiConfig.getPath())
+                    .methods(RequestMethod.valueOf(apiConfig.getMethod()))
+                    .build();
             bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class));
 
-            String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + createApiDTO.getPath();
+            String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
 
             //存入到db
-            createApiService.create( "1", createApiDTO.getSelectList().toString(), createApiDTO.getFixedWhereList().toString(), createApiDTO.getOptionalWhereList().toString(),
-                    createApiDTO.getPath(), "dynamicApiMethodSQL",createApiDTO.getMethod(), "adapterController",  url);
-        return "yes";
-    } catch (NoSuchMethodException e) {
-        e.printStackTrace();
-        return "Error: " + e.getMessage();
+            createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
+
+            return "success bro, tyr this: " + url;
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+            return "Error: " + e.getMessage();
+        }
     }
-    }
-
-    @PostMapping("/api/createJDBC")
-    public String createJDBC(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) throws NoSuchMethodException {
-
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        // 无参get方法
-        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths("/test")
-                .methods(RequestMethod.GET).build();
-        bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class));
-        String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + createApiDTO.getPath();
-        return "success to create and reload createRestApi() "+ url;
-
-    }
-    private boolean bindingApi(String path,String handler,String method, String targetMethodName,String selectList, String fixedWhereList,
-                               String optionalWhereList,String url, boolean load) throws NoSuchMethodException {
-
-            //        // 创建动态注册的信息，包括路径和 HTTP 方法
-//        RequestMappingInfo requestMappingInfo = RequestMappingInfo
-//                .paths("/api/users/index")
-//                .methods(RequestMethod.GET)
-//                .build();
-//        // 使用 handlerMapping 将新的 URL 映射到 AdapterController 的 myTest 方法
-//        bean.registerMapping(requestMappingInfo, "adapterController",
-//                AdapterController.class.getDeclaredMethod("getAllUsers"));
-//
-            RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
-                    .methods(RequestMethod.valueOf(method))
-                    .build();
-            bean.registerMapping(requestMappingInfo, handler, AdapterController.class.getDeclaredMethod(targetMethodName, SearchDTO.class));
-            //update to database
-            if (!load) createApiService.create( "1", selectList, fixedWhereList, optionalWhereList, path,
-                     targetMethodName,method, handler,  url);
-
-
-        return true;
-    }
-
     public ResponseVO dynamicApiMethodSQL(@RequestBody SearchDTO searchDTO) {
         return jdbcService.getDataFromDiffDBSource(searchDTO);
     }
+
+////    @PostMapping("/api/createJDBC1")
+////    public String createJDBC1(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request)  {
+////        try {
+////            RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+////            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(createApiDTO.getPath())
+////                .methods(RequestMethod.valueOf(createApiDTO.getMethod()))
+////                .build();
+////            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class));
+////
+////            String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + createApiDTO.getPath();
+////
+////            //存入到db
+////            createApiService.create( "1", createApiDTO.getSelectList().toString(), createApiDTO.getFixedWhereList().toString(), createApiDTO.getOptionalWhereList().toString(),
+////                    createApiDTO.getPath(), "dynamicApiMethodSQL",createApiDTO.getMethod(), "adapterController",  url);
+////        return "yes";
+////    } catch (NoSuchMethodException e) {
+////        e.printStackTrace();
+////        return "Error: " + e.getMessage();
+////    }
+//    }
+//
+////    @PostMapping("/api/createJDBC")
+////    public String createJDBC(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) throws NoSuchMethodException {
+////
+////        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+////        // 无参get方法
+////        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths("/test")
+////                .methods(RequestMethod.GET).build();
+////        bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class));
+////        String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + createApiDTO.getPath();
+////        return "success to create and reload createRestApi() "+ url;
+////
+////    }
+//    private boolean bindingApi(String path,String handler,String method, String targetMethodName,String selectList, String fixedWhereList,
+//                               String optionalWhereList,String url, boolean load) throws NoSuchMethodException {
+//
+//            //        // 创建动态注册的信息，包括路径和 HTTP 方法
+////        RequestMappingInfo requestMappingInfo = RequestMappingInfo
+////                .paths("/api/users/index")
+////                .methods(RequestMethod.GET)
+////                .build();
+////        // 使用 handlerMapping 将新的 URL 映射到 AdapterController 的 myTest 方法
+////        bean.registerMapping(requestMappingInfo, "adapterController",
+////                AdapterController.class.getDeclaredMethod("getAllUsers"));
+////
+//            RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+//            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
+//                    .methods(RequestMethod.valueOf(method))
+//                    .build();
+//            bean.registerMapping(requestMappingInfo, handler, AdapterController.class.getDeclaredMethod(targetMethodName, SearchDTO.class));
+//            //update to database
+//            if (!load) createApiService.create( "1", selectList, fixedWhereList, optionalWhereList, path,
+//                     targetMethodName,method, handler,  url);
+//
+//
+//        return true;
+//    }
+
+
 
 
 

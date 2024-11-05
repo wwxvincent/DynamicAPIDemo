@@ -2,14 +2,12 @@ package com.vincent.dynamicapidemo.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
-import com.vincent.dynamicapidemo.entity.DynamicAPIMappingInfo;
-import com.vincent.dynamicapidemo.entity.DynamicAPISQLAssemble;
+
 import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
 import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
 import com.vincent.dynamicapidemo.entity.DataSource;
 import com.vincent.dynamicapidemo.mapper.DataSourceMapper;
-import com.vincent.dynamicapidemo.mapper.DynamicAPIMappingInfoMapper;
-import com.vincent.dynamicapidemo.mapper.DynamicAPISQLAssembleMapper;
+
 import com.vincent.dynamicapidemo.service.JDBCService;
 import com.vincent.dynamicapidemo.util.JDBCUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -32,37 +30,33 @@ public class JDBCServiceImpl implements JDBCService {
     @Autowired
     private  DataSourceMapper dataSourceMapper;
 
-    @Autowired
-    DynamicAPIMappingInfoMapper dynamicAPIMappingInfoMapper;
 
-    @Autowired
-    DynamicAPISQLAssembleMapper dynamicAPISQLAssembleMapper;
 
 
     @Override
     public ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO) {
         // 1 拼sql
-        DynamicAPIMappingInfo dynamicAPIMappingInfo = dynamicAPIMappingInfoMapper.selectById(searchDTO.getBindingId());
-        System.out.println(dynamicAPIMappingInfo.toString());
-        DynamicAPISQLAssemble sqlAssemble = dynamicAPISQLAssembleMapper.selectById(dynamicAPIMappingInfo.getSqlId());
-
-        String selectStr = sqlAssemble.getSelectElement();
-        String whereFixedStr = sqlAssemble.getWhereElementFixed();
-        String whereOptionalStr = sqlAssemble.getWhereElementOptional();
-//        List<Object> searList = Arrays.asList(searchDTO.getParams());
-
-        System.out.println("select: "+selectStr);
-        System.out.println("whereFixed: "+whereFixedStr);
-        System.out.println("whereOptional: "+whereOptionalStr);
-        // 1.1 组装sql
-        String reStr = selectStr+" " + whereFixedStr + " " + whereOptionalStr;
-        ResponseVO responseVO = new ResponseVO();
-        responseVO.setData(reStr);
+//        DynamicAPIMappingInfo dynamicAPIMappingInfo = dynamicAPIMappingInfoMapper.selectById(searchDTO.getBindingId());
+//        System.out.println(dynamicAPIMappingInfo.toString());
+//        DynamicAPISQLAssemble sqlAssemble = dynamicAPISQLAssembleMapper.selectById(dynamicAPIMappingInfo.getSqlId());
+//
+//        String selectStr = sqlAssemble.getSelectElement();
+//        String whereFixedStr = sqlAssemble.getWhereElementFixed();
+//        String whereOptionalStr = sqlAssemble.getWhereElementOptional();
+//        String[][] params = searchDTO.getParams();
+//
+//        System.out.println("select: "+selectStr);
+//        System.out.println("whereFixed: "+whereFixedStr);
+//        System.out.println("whereOptional: "+whereOptionalStr);
+//        // 1.1 组装sql
+//        String reStr = selectStr+" " + whereFixedStr + " " + whereOptionalStr;
+//        ResponseVO responseVO = new ResponseVO();
+//        responseVO.setData(reStr);
 
         // 2 连数据库
 
 
-        return responseVO;
+        return null;
     }
 //    @Override
 //    public ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO) {

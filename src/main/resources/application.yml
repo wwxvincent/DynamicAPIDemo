@@ -15,7 +15,7 @@ spring:
     driverClassName: com.mysql.cj.jdbc.Driver #我靠，这里要改写法
     password: 'vincent2017727'
     username: 'root'
-    url: jdbc:mysql://localhost:3306/gptDB?serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/dynamic_api_db?serverTimezone=UTC
 
     ###################以下为druid增加的配置###########################
     type: com.alibaba.druid.pool.DruidDataSource
