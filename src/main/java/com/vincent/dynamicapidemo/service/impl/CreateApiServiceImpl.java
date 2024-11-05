@@ -8,6 +8,8 @@ import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
 import com.vincent.dynamicapidemo.mapper.*;
 import com.vincent.dynamicapidemo.service.CreateApiService;
+import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +21,7 @@ import java.util.List;
  * @Date: 11/2/24
  * @Description:
  */
+@Slf4j
 @Service
 public class CreateApiServiceImpl implements CreateApiService {
 
@@ -31,11 +34,18 @@ public class CreateApiServiceImpl implements CreateApiService {
     private DynamicAPIMainConfigMapper dynamicAPIMainConfigMapper;
 
     @Autowired
+    private DynamicAPIMainConfigService dynamicAPIMainConfigService;
+
+    @Autowired
     private DynamicAPIParamsConfigMapper dynamicAPIParamsConfigMapper;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean saveConfig(ApiConfig apiConfig, String handler, String targetMethodName, String url) {
+        if(dynamicAPIMainConfigService.checkExisted(url)) {
+            log.info("<===== Invalid url !!!! This url already existed");
+            return false;
+        }
 
         // 1. 查询数据字典表，获取数据库连接配置表id
         QueryWrapper<DynamicAPIDict> queryWrapper = new QueryWrapper<>();

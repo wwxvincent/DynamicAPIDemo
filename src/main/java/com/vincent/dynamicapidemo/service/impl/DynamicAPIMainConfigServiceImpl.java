@@ -26,4 +26,11 @@ public class DynamicAPIMainConfigServiceImpl implements DynamicAPIMainConfigServ
         queryWrapper.eq("status","1"); // 选出所有的状态为1的绑定信息
         return dynamicAPIMainConfigMapper.selectList(queryWrapper);
     }
+
+    @Override
+    public boolean checkExisted(String url) {
+        QueryWrapper<DynamicAPIMainConfig> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("url",url);
+        return !dynamicAPIMainConfigMapper.selectList(queryWrapper).isEmpty();
+    }
 }

@@ -33,9 +33,6 @@ public class AdapterController {
 
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private DynamicAPIMainConfigService dynamicAPIMainConfigService;
 
     @Autowired
@@ -79,6 +76,10 @@ public class AdapterController {
 
     @PostMapping("/api/create")
     public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
+        String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
+        if (dynamicAPIMainConfigService.checkExisted(url)) {
+            return "Sorry bro, this url already existed! Change one!";
+        }
         try {
             RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
             RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(apiConfig.getPath())
@@ -86,7 +87,6 @@ public class AdapterController {
                     .build();
             bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class, HttpServletRequest.class));
 
-            String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
 
             //存入到db
             createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
