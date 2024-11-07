@@ -1,6 +1,103 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Creation</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
 <body>
-<h1>hello word!!!</h1>
-<p>this is a html page</p>
+<div class="container">
+    <h1>Create API</h1>
+    <form id="apiForm">
+        <label for="apiName">API Name</label>
+        <input type="text" name="apiName" id="apiName" value="API demo name">
+
+        <label for="apiWorkArea">API Work Area</label>
+        <input type="text" name="apiWorkArea" id="apiWorkArea" value="">
+
+        <label for="path">Path</label>
+        <input type="text" name="path" id="path" value="/test">
+
+        <label for="method">Method</label>
+        <select name="method" id="method">
+            <option value="GET">GET</option>
+            <option value="POST" selected>POST</option>
+        </select>
+
+        <label for="sourceType">Source Type</label>
+        <select name="sourceType" id="sourceType">
+            <option value="mysql" selected>mysql</option>
+            <option value="doris">doris</option>
+        </select>
+
+        <label for="sourceSchema">Source Schema</label>
+        <input type="text" name="sourceSchema" id="sourceSchema" value="gptDB">
+
+        <label for="sourceTable">Source Table</label>
+        <input type="text" name="sourceTable" id="sourceTable" value="user">
+
+        <label for="selectList">Select List (comma-separated)</label>
+        <input type="text" name="selectList" id="selectList" value="name, id, depId">
+
+        <label for="paramsList">Params List (JSON format)</label>
+        <textarea name="paramsList" id="paramsList" rows="6">[
+    {
+      "sort": 1,
+      "param_name": "depId",
+      "param_value": "6",
+      "operator": "=",
+      "required": "0",
+      "default_value": "1",
+      "description": "部门ID",
+      "sample": "1"
+    },
+    {
+      "sort": 2,
+      "param_name": "name",
+      "param_value": "Wanzhou",
+      "operator": "=",
+      "required": "0",
+      "default_value": "zhansan",
+      "description": "名字",
+      "sample": "zhansan"
+    }
+]</textarea>
+
+        <button type="button" onclick="submitForm()">Create API</button>
+    </form>
+
+    <div id="response"></div>
+</div>
+
+<script>
+    function submitForm() {
+        const apiData = {
+            apiName: $('#apiName').val(),
+            apiWorkArea: $('#apiWorkArea').val(),
+            path: $('#path').val(),
+            method: $('#method').val(),
+            sourceType: $('#sourceType').val(),
+            sourceSchema: $('#sourceSchema').val(),
+            sourceTable: $('#sourceTable').val(),
+            selectList: $('#selectList').val().split(',').map(item => item.trim()),
+            paramsList: JSON.parse($('#paramsList').val())
+        };
+
+        $.ajax({
+            url: '/api/create',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(apiData),
+            success: function (response) {
+                $('#response').html('<p>API created successfully: ' + response + '</p>');
+            },
+            error: function (xhr) {
+                $('#response').html('<p>Error: ' + xhr.responseText + '</p>');
+            }
+        });
+    }
+</script>
 </body>
 </html>

@@ -4,6 +4,8 @@ server:
     context-path: /vincent
 
 spring:
+  application:
+    name: DynamicAPIDemo  # 这里设置你的项目名字
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -44,8 +46,19 @@ spring:
     # 合并多个DruidDataSource的监控数据
     useGlobalDataSourceStat: true
     ###############以上为配置druid添加的配置########################################
-
-
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:6999
+      port: 8719 #客户端监控API的端口
+      eager: true #取消Sentinel控制台懒加载
+csp:
+  sentinel:
+    log:
+      dir: /Users/wenxuanwang/Downloads/sentinel
+feign:
+  sentinel:
+    enabled: true
 mybatis:
     type-aliases-package: com.vincent.dynamicapidemo.entity  #扫描包路径
     configuration:
