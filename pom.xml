@@ -139,6 +139,19 @@
         </dependency>
         <!--  sentinel 的调用 -->
 
+        <!-- redis依赖 -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+<!--            <version>2.7.7</version> &lt;!&ndash; 适用于 Spring Boot 2.7.x &ndash;&gt;-->
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+
+
+
     </dependencies>
     <dependencyManagement>
         <dependencies>
@@ -170,7 +183,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.vincent.dynamicapidemo.DynamicApiDemoApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
