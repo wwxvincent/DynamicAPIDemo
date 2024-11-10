@@ -71,7 +71,7 @@ public class APIMessageReceiver implements MessageListener {
             String contextPath = env.getProperty("server.servlet.context-path");
             initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
 
-            log.info("<===== load dynamic API: " + dynamicAPIMainConfig.toString());
+            log.info("<===== load dynamic API From Redis topic : " + dynamicAPIMainConfig.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -17,6 +17,7 @@ import com.vincent.dynamicapidemo.service.CreateApiService;
 import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
 import com.vincent.dynamicapidemo.service.JDBCService;
 import com.vincent.dynamicapidemo.util.RedisUtils;
+import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +66,7 @@ public class AdapterController {
 
     @PostConstruct
     public void init() throws NoSuchMethodException {
-        loadExistingMappings();
+//        loadExistingMappings();
     }
     private void loadExistingMappings() throws NoSuchMethodException {
         RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
@@ -80,7 +81,7 @@ public class AdapterController {
                 bean.registerMapping(requestMappingInfo, dynamicAPIMainConfig.getHandler(), AdapterController.class.getDeclaredMethod(dynamicAPIMainConfig.getTargetMethodName(), SearchDTO.class, HttpServletRequest.class));
                 // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
                 String contextPath = env.getProperty("server.servlet.context-path");
-                initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
+                SentinelConfigUtil.initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
 
                 log.info("<===== load dynamic API: " + dynamicAPIMainConfig.toString());
             }
@@ -92,17 +93,17 @@ public class AdapterController {
 
     }
 
-    // 配置sentinel中的限流降级默认配置
-    private static void initFlowRules(String resourceName) {
-        List<FlowRule> rules = FlowRuleManager.getRules();
-        FlowRule rule = new FlowRule();
-        rule.setResource(resourceName);
-        rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-        // 设置每秒的通行数为1
-        rule.setCount(1);
-        rules.add(rule);
-        FlowRuleManager.loadRules(rules);
-    }
+//    // 配置sentinel中的限流降级默认配置
+//    private static void initFlowRules(String resourceName) {
+//        List<FlowRule> rules = FlowRuleManager.getRules();
+//        FlowRule rule = new FlowRule();
+//        rule.setResource(resourceName);
+//        rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
+//        // 设置每秒的通行数为1
+//        rule.setCount(1);
+//        rules.add(rule);
+//        FlowRuleManager.loadRules(rules);
+//    }
 
     @Autowired
     private RedisUtils redisUtils;
@@ -125,7 +126,7 @@ public class AdapterController {
 
 //        redisTemplate.convertAndSend("api_sync_channel", routeSyncMessage);
 
-        return "success. Go have a try, bro!";
+        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
 
     }
     @PostMapping("/api/create")
@@ -142,7 +143,7 @@ public class AdapterController {
             bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class, HttpServletRequest.class));
 
             // 注册sentinel信息
-            initFlowRules(request.getContextPath() +  apiConfig.getPath());
+            SentinelConfigUtil.initFlowRules(request.getContextPath() +  apiConfig.getPath());
 
             //存入到db
             int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
