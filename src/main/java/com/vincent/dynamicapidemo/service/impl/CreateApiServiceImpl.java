@@ -41,10 +41,10 @@ public class CreateApiServiceImpl implements CreateApiService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public boolean saveConfig(ApiConfig apiConfig, String handler, String targetMethodName, String url) {
+    public int saveConfig(ApiConfig apiConfig, String handler, String targetMethodName, String url) {
         if(dynamicAPIMainConfigService.checkExisted(url)) {
             log.info("<===== Invalid url !!!! This url already existed");
-            return false;
+            return -1;
         }
 
         // 1. 查询数据字典表，获取数据库连接配置表id
@@ -90,7 +90,7 @@ public class CreateApiServiceImpl implements CreateApiService {
 
 
 
-        return true;
+        return mainId;
     }
 
 

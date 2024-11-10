@@ -2,10 +2,12 @@ package com.vincent.dynamicapidemo.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
+import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.vincent.dynamicapidemo.listener.APIMessageReceiver;
 import com.vincent.dynamicapidemo.listener.PrintMessageReceiver;
-import com.vincent.dynamicapidemo.listener.RedisMessageListener;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -51,6 +53,21 @@ public class RedisConfig {
         redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.afterPropertiesSet();
 
+//        // 配置 Jackson2JsonRedisSerializer
+//        Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        PolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder().build();
+//        objectMapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
+//        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+//        serializer.setObjectMapper(objectMapper);
+//
+//        // 设置 StringRedisSerializer 用于 key
+//        redisTemplate.setKeySerializer(new StringRedisSerializer());
+//        redisTemplate.setValueSerializer(serializer);
+//        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
+//        redisTemplate.setHashValueSerializer(serializer);
+//        redisTemplate.afterPropertiesSet();
+
         return redisTemplate;
     }
 
@@ -67,22 +84,19 @@ public class RedisConfig {
     */
     @Bean
     @SuppressWarnings("all")
-    public RedisMessageListenerContainer container(RedisConnectionFactory redisConnectionFactory, RedisMessageListener listener, MessageListenerAdapter adpter, APIMessageReceiver receiver) {
+    public RedisMessageListenerContainer container(RedisConnectionFactory redisConnectionFactory, APIMessageReceiver receiver, MessageListenerAdapter adapter) {
 
-        final String TOPIC_NAME1 = "TEST_TOPIC1";
+        final String TOPIC_NAME = "api_sync_channel";
         final String TOPIC_NAME2 = "test_channel";
-        final String TOPIC_NAME3 = "api_sync_channel";
-
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
         // 监听所有库的key过期事件
         container.setConnectionFactory(redisConnectionFactory);
         // 所有的订阅消息，都需要在这里进行注册绑定，new PatternTopic(TOPIC_NAME)表示发布的主题信息
         // 可以添加多个 messageListener， 配置不同的通道
-        container.addMessageListener(listener, new PatternTopic(TOPIC_NAME1));
-        container.addMessageListener(adpter, new PatternTopic(TOPIC_NAME2));
+        container.addMessageListener(adapter, new PatternTopic(TOPIC_NAME2));
 
         // 监听 "api_sync_channel" 频道
-        container.addMessageListener(receiver, new PatternTopic(TOPIC_NAME3));
+        container.addMessageListener(receiver, new PatternTopic(TOPIC_NAME));
 
         /**
          * 设置序列化对象

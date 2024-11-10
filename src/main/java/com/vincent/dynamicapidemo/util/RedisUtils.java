@@ -18,9 +18,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 @Component
 public class RedisUtils {
     //注入自定义redisTemplate
+//    @Autowired
+//    @Qualifier("redisTemplate")
+//    private RedisTemplate redisTemplate;
+
     @Autowired
-    @Qualifier("redisTemplate")
-    private RedisTemplate redisTemplate;
+    private RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 向通道发布消息

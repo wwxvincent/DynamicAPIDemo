@@ -6,8 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-
 /**
  * @Author: Vincent(Wenxuan) Wang
  * @Date: 11/8/24
@@ -16,12 +14,14 @@ import java.util.Map;
 @Slf4j
 @Component
 public class PrintMessageReceiver {
+    @Autowired
+    private RedisTemplate redisTemplate;
 
-
-    public void receiveMessage(MessageDTO messageDTO) {
+    public void receiveMessage(MessageDTO messageDto , String channel) {
 
         // 接收的topic
+        log.info("channel:" + channel);
 
-        log.info("message:" + messageDTO.getContent());
+        log.info("message:" + messageDto.getTitle());
     }
 }

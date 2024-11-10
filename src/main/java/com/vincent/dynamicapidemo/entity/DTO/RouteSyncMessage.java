@@ -9,6 +9,7 @@ import java.io.Serializable;
  * @Date: 11/8/24
  * @Description:
  */
+//@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_ARRAY)
 @Data
 public class RouteSyncMessage implements Serializable {
 

@@ -6,6 +6,8 @@ import com.alibaba.csp.sentinel.SphU;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vincent.dynamicapidemo.entity.DTO.RouteSyncMessage;
 import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
 import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
@@ -14,10 +16,12 @@ import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.service.CreateApiService;
 import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
 import com.vincent.dynamicapidemo.service.JDBCService;
+import com.vincent.dynamicapidemo.util.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
@@ -61,7 +65,7 @@ public class AdapterController {
 
     @PostConstruct
     public void init() throws NoSuchMethodException {
-//        loadExistingMappings();
+        loadExistingMappings();
     }
     private void loadExistingMappings() throws NoSuchMethodException {
         RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
@@ -100,6 +104,30 @@ public class AdapterController {
         FlowRuleManager.loadRules(rules);
     }
 
+    @Autowired
+    private RedisUtils redisUtils;
+
+    @GetMapping("/redis/test")
+    public String testRedis() throws JsonProcessingException {
+        // 发布路由同步消息到Redis 频道
+        RouteSyncMessage routeSyncMessage = new RouteSyncMessage();
+        routeSyncMessage.setPath("/test");
+        routeSyncMessage.setMethod("POST");
+        routeSyncMessage.setHandler("adapterController");
+        routeSyncMessage.setTargetMethodName("dynamicApiMethodSQL");
+
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        String jsonMessage = objectMapper.writeValueAsString(routeSyncMessage);
+
+//        redisUtils.convertAndSend("api_sync_channel", routeSyncMessage);
+
+        redisTemplate.convertAndSend("api_sync_channel", 35);
+
+//        redisTemplate.convertAndSend("api_sync_channel", routeSyncMessage);
+
+        return "success. Go have a try, bro!";
+
+    }
     @PostMapping("/api/create")
     public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
         String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
@@ -117,15 +145,19 @@ public class AdapterController {
             initFlowRules(request.getContextPath() +  apiConfig.getPath());
 
             //存入到db
-            createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
-
+            int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
+            System.out.println("瓜西 看这里，看是不是对的"+apiConfigId);
             // 发布路由同步消息到Redis 频道
-            RouteSyncMessage routeSyncMessage = new RouteSyncMessage();
-            routeSyncMessage.setPath(apiConfig.getPath());
-            routeSyncMessage.setMethod(apiConfig.getMethod());
-            routeSyncMessage.setHandler("adapterController");
+//            RouteSyncMessage routeSyncMessage = new RouteSyncMessage();
+//            routeSyncMessage.setPath(apiConfig.getPath());
+//            routeSyncMessage.setMethod(apiConfig.getMethod());
+//            routeSyncMessage.setHandler("adapterController");
+//            routeSyncMessage.setTargetMethodName(apiConfig.getMethod());
+//
+//            redisTemplate.convertAndSend("api_sync_channel", routeSyncMessage);
 
-            redisTemplate.convertAndSend("api-sync-channel", routeSyncMessage);
+            redisTemplate.convertAndSend("api_sync_channel", apiConfigId);
+
 
             return "success bro, tyr this: " + url;
         } catch (NoSuchMethodException e) {
