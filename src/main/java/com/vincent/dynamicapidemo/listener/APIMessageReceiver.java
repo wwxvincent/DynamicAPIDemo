@@ -9,6 +9,7 @@ import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIMainConfigMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.Message;
@@ -46,32 +47,46 @@ public class APIMessageReceiver implements MessageListener {
     @Autowired
     private DynamicAPIMainConfigMapper dynamicAPIMainConfigMapper;
 
+    @Value("${app.current-node-id}")
+    private String currentNodeId;
+
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {
             System.out.println(new String(message.getBody(), StandardCharsets.UTF_8));
             String messageBody = new String(message.getBody(), StandardCharsets.UTF_8);
+            if (messageBody.startsWith("\"") && messageBody.endsWith("\"")) {
+                messageBody = messageBody.substring(1, messageBody.length() - 1);
+            }            String[] parts = messageBody.split(":", 2);
             int messageId = -1;
-            try {
-                messageId = Integer.parseInt(messageBody);
-                System.out.println("messageId: " + messageId);
-            } catch (NumberFormatException e) {
-                System.err.println("无法将消息转换为int: " + messageBody);
+            System.out.println("p1: "+parts[0]);
+            System.out.println("curId: "+currentNodeId);
+            System.out.println(!currentNodeId.equals(parts[0]));
+            if (!currentNodeId.equals(parts[0])) {
+                try {
+                    messageId = Integer.parseInt(parts[1]);
+                    System.out.println("messageId: " + messageId);
+                } catch (NumberFormatException e) {
+                    System.err.println("无法将消息转换为int: " + messageBody);
+                }
+                DynamicAPIMainConfig dynamicAPIMainConfig = dynamicAPIMainConfigMapper.selectById(messageId);
+
+                RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+
+                // 从DB中获取配置信息，重新绑定API。
+                RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(dynamicAPIMainConfig.getPath())
+                        .methods(RequestMethod.valueOf(dynamicAPIMainConfig.getMethod()))
+                        .build();
+                bean.registerMapping(requestMappingInfo, dynamicAPIMainConfig.getHandler(), AdapterController.class.getDeclaredMethod(dynamicAPIMainConfig.getTargetMethodName(), SearchDTO.class, HttpServletRequest.class));
+                // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
+                String contextPath = env.getProperty("server.servlet.context-path");
+                initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
+
+                log.info("<===== load dynamic API From Redis topic : " + dynamicAPIMainConfig.toString());
+            } else { // test, 成功后删掉else
+                System.out.println("本机发出的topic到redis， 跳过");
             }
-            DynamicAPIMainConfig dynamicAPIMainConfig = dynamicAPIMainConfigMapper.selectById(messageId);
 
-            RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-
-            // 从DB中获取配置信息，重新绑定API。
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(dynamicAPIMainConfig.getPath())
-                    .methods(RequestMethod.valueOf(dynamicAPIMainConfig.getMethod()))
-                    .build();
-            bean.registerMapping(requestMappingInfo, dynamicAPIMainConfig.getHandler(), AdapterController.class.getDeclaredMethod(dynamicAPIMainConfig.getTargetMethodName(), SearchDTO.class, HttpServletRequest.class));
-            // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
-            String contextPath = env.getProperty("server.servlet.context-path");
-            initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
-
-            log.info("<===== load dynamic API From Redis topic : " + dynamicAPIMainConfig.toString());
         } catch (Exception e) {
             e.printStackTrace();
         }

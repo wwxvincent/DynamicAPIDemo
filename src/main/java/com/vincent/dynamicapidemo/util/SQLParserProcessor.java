@@ -24,8 +24,8 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 /**
- * @author mazhikun
- * @date 2023/8/2 - 11:21
+ * @author Vincent(Wenxuan) Wang
+ * @Date: 11/7/24
  */
 @Component
 public class SQLParserProcessor {

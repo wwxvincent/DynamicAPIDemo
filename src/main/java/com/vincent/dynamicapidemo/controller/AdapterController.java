@@ -19,6 +19,7 @@ import com.vincent.dynamicapidemo.service.JDBCService;
 import com.vincent.dynamicapidemo.util.RedisUtils;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -116,19 +117,23 @@ public class AdapterController {
         routeSyncMessage.setMethod("POST");
         routeSyncMessage.setHandler("adapterController");
         routeSyncMessage.setTargetMethodName("dynamicApiMethodSQL");
+        System.out.println(currentNodeId);
 
 //        ObjectMapper objectMapper = new ObjectMapper();
 //        String jsonMessage = objectMapper.writeValueAsString(routeSyncMessage);
 
 //        redisUtils.convertAndSend("api_sync_channel", routeSyncMessage);
 
-        redisTemplate.convertAndSend("api_sync_channel", 35);
+        redisTemplate.convertAndSend("api_sync_channel", 37);
 
 //        redisTemplate.convertAndSend("api_sync_channel", routeSyncMessage);
 
         return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
 
     }
+
+    @Value("${app.current-node-id}")
+    private String currentNodeId;
     @PostMapping("/api/create")
     public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
         String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
@@ -157,7 +162,8 @@ public class AdapterController {
 //
 //            redisTemplate.convertAndSend("api_sync_channel", routeSyncMessage);
 
-            redisTemplate.convertAndSend("api_sync_channel", apiConfigId);
+            String message = currentNodeId + ":" + apiConfigId;
+            redisTemplate.convertAndSend("api_sync_channel", message);
 
 
             return "success bro, tyr this: " + url;

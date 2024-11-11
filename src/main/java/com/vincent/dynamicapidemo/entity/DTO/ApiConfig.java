@@ -15,6 +15,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ApiConfig {
+    private String createType;
     private String apiName;
     private String apiWorkArea;
     private String path;

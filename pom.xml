@@ -13,12 +13,13 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 <!--        <spring-boot.version>2.5.4</spring-boot.version>-->
         <spring-boot.version>2.7.10</spring-boot.version>
-
+<!--        <current-node-id>api-redis-1</current-node-id> &lt;!&ndash; 定义变量 &ndash;&gt;-->
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+
         </dependency>
 
         <dependency>
