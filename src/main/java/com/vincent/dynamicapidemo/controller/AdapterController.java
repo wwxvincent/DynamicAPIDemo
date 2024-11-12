@@ -3,12 +3,6 @@ package com.vincent.dynamicapidemo.controller;
 import com.alibaba.csp.sentinel.Entry;
 
 import com.alibaba.csp.sentinel.SphU;
-import com.alibaba.csp.sentinel.slots.block.RuleConstant;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
-import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vincent.dynamicapidemo.entity.DTO.RouteSyncMessage;
 import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
 import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
 import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
@@ -17,17 +11,13 @@ import com.vincent.dynamicapidemo.service.CreateApiService;
 import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
 import com.vincent.dynamicapidemo.service.JDBCService;
 import com.vincent.dynamicapidemo.util.DynamicApiUtil;
-import com.vincent.dynamicapidemo.util.RedisUtils;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.annotation.PostConstruct;
@@ -67,10 +57,10 @@ public class AdapterController {
     private RedisTemplate<String, Object> redisTemplate;
 
     @PostConstruct
-    public void init() throws NoSuchMethodException {
+    public void init() {
         loadExistingMappings();
     }
-    private void loadExistingMappings() throws NoSuchMethodException {
+    private void loadExistingMappings() {
         RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
 
         List<DynamicAPIMainConfig> existingMappings = dynamicAPIMainConfigService.getExistingMappingInfo();
@@ -107,7 +97,11 @@ public class AdapterController {
     @GetMapping("/redis/test")
     public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
         // 发布路由同步消息到Redis 频道
-        redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
+        try {
+            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
+        } catch (Exception e) {
+            return e.getMessage();
+       }
 
 
         return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
@@ -145,7 +139,7 @@ public class AdapterController {
         // 注册sentinel信息
         SentinelConfigUtil.initFlowRules(request.getContextPath() +  apiConfig.getPath());
         // 存入到db
-        int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
+        int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", targetMethodName,url);
 
         // 发送topic到redis中
         String message = DynamicApiUtil.getIpAddr() + ":" + apiConfigId;

@@ -8,6 +8,7 @@ import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIMainConfigMapper;
 import com.vincent.dynamicapidemo.util.DynamicApiUtil;
+import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
 
-import static com.vincent.dynamicapidemo.util.SentinelConfigUtil.initFlowRules;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
@@ -40,7 +40,6 @@ public class APIMessageReceiver implements MessageListener {
     @Autowired
     private ApplicationContext applicationContext;
 
-
     @Autowired
     private Environment env;
 
@@ -52,38 +51,40 @@ public class APIMessageReceiver implements MessageListener {
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {
-            System.out.println(new String(message.getBody(), StandardCharsets.UTF_8));
+            log.debug(new String(message.getBody(), StandardCharsets.UTF_8));
             String messageBody = new String(message.getBody(), StandardCharsets.UTF_8);
             if (messageBody.startsWith("\"") && messageBody.endsWith("\"")) {
                 messageBody = messageBody.substring(1, messageBody.length() - 1);
             }            String[] parts = messageBody.split(":", 2);
             int messageId = -1;
-            System.out.println("p1: "+parts[0]);
-            System.out.println("curId: "+ DynamicApiUtil.getIpAddr() );
-            System.out.println(!Objects.equals(DynamicApiUtil.getIpAddr(), parts[0]));
+            log.debug("###### Redis info ###### ip address from Redis topic: "+parts[0]);
+            log.debug("###### Redis info ###### ip addr for local machine: "+ DynamicApiUtil.getIpAddr());
+            log.debug("###### Redis info ###### message of this message: "+parts[1]);
             if (!Objects.equals(DynamicApiUtil.getIpAddr(), parts[0])) {
                 try {
                     messageId = Integer.parseInt(parts[1]);
-                    System.out.println("messageId: " + messageId);
+                    log.debug("###### Redis info ###### messageId: " + messageId);
                 } catch (NumberFormatException e) {
-                    System.err.println("无法将消息转换为int: " + messageBody);
+                    log.debug("###### Redis info ###### 无法将消息转换为int: " + messageBody);
                 }
                 DynamicAPIMainConfig dynamicAPIMainConfig = dynamicAPIMainConfigMapper.selectById(messageId);
-
+                if(dynamicAPIMainConfig==null){
+                    log.debug("Invalid dynamic api config ID from redis message");
+                    return;
+                }
                 RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
 
                 // 从DB中获取配置信息，重新绑定API。
-                RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(dynamicAPIMainConfig.getPath())
-                        .methods(RequestMethod.valueOf(dynamicAPIMainConfig.getMethod()))
-                        .build();
-                bean.registerMapping(requestMappingInfo, dynamicAPIMainConfig.getHandler(), AdapterController.class.getDeclaredMethod(dynamicAPIMainConfig.getTargetMethodName(), SearchDTO.class, HttpServletRequest.class));
+                DynamicApiUtil.create(bean, dynamicAPIMainConfig.getPath(), dynamicAPIMainConfig.getMethod(), dynamicAPIMainConfig.getHandler(), dynamicAPIMainConfig.getTargetMethodName());
+                // 注册sentinel信息
                 // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
-                String contextPath = env.getProperty("server.servlet.context-path");
-                initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
+                String sourceName = env.getProperty("server.servlet.context-path") + dynamicAPIMainConfig.getPath();
+                SentinelConfigUtil.initFlowRules(sourceName);
 
                 log.info("<===== load dynamic API From Redis topic : " + dynamicAPIMainConfig.toString());
             } else { // test, 成功后删掉else
                 System.out.println("本机发出的topic到redis， 跳过");
+                log.info("本机发出的topic到redis， 跳过");
             }
 
         } catch (Exception e) {
