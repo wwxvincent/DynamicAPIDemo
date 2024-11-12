@@ -42,6 +42,23 @@ public class CreateApiServiceImpl implements CreateApiService {
     @Transactional(rollbackFor = Exception.class)
     @Override
     public int saveConfig(ApiConfig apiConfig, String handler, String targetMethodName, String url) {
+
+        String type = apiConfig.getCreateType();
+        switch (type) {
+            case "TABLE" :
+                return tableSave(apiConfig, handler, targetMethodName, url);
+            case "SQL" :
+                // to-do
+                return -1;
+            case "JAR" :
+                // to-do
+                return -1;
+            default:
+                return -1;
+        }
+    }
+
+    private int tableSave(ApiConfig apiConfig, String handler, String targetMethodName, String url) {
         if(dynamicAPIMainConfigService.checkExisted(url)) {
             log.info("<===== Invalid url !!!! This url already existed");
             return -1;
@@ -87,43 +104,7 @@ public class CreateApiServiceImpl implements CreateApiService {
             paramsConfig.setSample(p.getSample());
             dynamicAPIParamsConfigMapper.insert(paramsConfig);
         }
-
-
-
         return mainId;
     }
 
-
-//    @Override
-//    public boolean create(String datasourceId, String selectList, String fixedWhereList,String optionalWhereList, String path,
-//                          String targetMethodName,String method, String handler, String url) {
-//
-//        try {
-//            // 1. update to sql table
-//            DynamicAPISQLAssemble dynamicAPSQLIAssemble = new DynamicAPISQLAssemble();
-//            String uid = UUID.randomUUID().toString();
-//            dynamicAPSQLIAssemble.setId(uid);
-//            dynamicAPSQLIAssemble.setDatasourceId(datasourceId);
-//            dynamicAPSQLIAssemble.setSelectElement(selectList);
-//            dynamicAPSQLIAssemble.setWhereElementFixed(fixedWhereList);
-//            dynamicAPSQLIAssemble.setWhereElementOptional(optionalWhereList);
-//            dynamicAPISQLAssembleMapper.insert(dynamicAPSQLIAssemble);
-//            // 2. update to binding table
-//            DynamicAPIMappingInfo dynamicAPIMappingInfo = new DynamicAPIMappingInfo();
-//            dynamicAPIMappingInfo.setId(UUID.randomUUID().toString());
-//            dynamicAPIMappingInfo.setPath(path);
-//            dynamicAPIMappingInfo.setMethods(RequestMethod.valueOf(method));
-//            dynamicAPIMappingInfo.setHandler(handler);
-//            dynamicAPIMappingInfo.setTargetMethodName(targetMethodName);
-//            dynamicAPIMappingInfo.setUrl(url);
-//            dynamicAPIMappingInfo.setDatasource_id(datasourceId);// 暂时就查第一个记录
-//            dynamicAPIMappingInfo.setSqlId(uid);
-//            dynamicAPIMappingInfoMapper.insert(dynamicAPIMappingInfo);
-//            return true;
-//        } catch (IllegalArgumentException e) {
-//            e.printStackTrace();
-//            return false;
-//        }
-//
-//    }
 }

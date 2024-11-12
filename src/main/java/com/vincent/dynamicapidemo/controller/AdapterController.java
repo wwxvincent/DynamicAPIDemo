@@ -126,23 +126,27 @@ public class AdapterController {
         switch (apiConfig.getCreateType()) {
             case "TABLE":
                 targetMethodName = "dynamicApiMethodTable";
-                // 注册动态路由，绑定url和目标方法
-                DynamicApiUtil.create(bean, apiConfig.getPath(), apiConfig.getMethod(), "adapterController",targetMethodName);
-                // 注册sentinel信息
-                SentinelConfigUtil.initFlowRules(request.getContextPath() +  apiConfig.getPath());
-                // 存入到db
-                int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", targetMethodName,url);
-                // 组装传到redis中的topic
-                message = message + apiConfigId;
+
                 break;
             case "SQL":
                 targetMethodName = "dynamicApiMethodSql";
+                break;
+            case "JAR":
+                targetMethodName = "dynamicApiMethodJar";
                 break;
             default:
                 targetMethodName = "defaultMethod"; // 如果没有匹配到，可以设置默认方法名
                 break;
         }
 
+        // 注册动态路由，绑定url和目标方法
+        DynamicApiUtil.create(bean, apiConfig.getPath(), apiConfig.getMethod(), "adapterController",targetMethodName);
+        // 注册sentinel信息
+        SentinelConfigUtil.initFlowRules(request.getContextPath() +  apiConfig.getPath());
+        // 存入到db
+        int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", targetMethodName,url);
+        // 组装传到redis中的topic
+        message = message + apiConfigId;
         // 发送topic到redis中
         redisTemplate.convertAndSend("api_sync_channel", message);
 
