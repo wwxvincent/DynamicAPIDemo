@@ -68,14 +68,16 @@ public class JDBCServiceImpl implements JDBCService {
             dynamicAPIDatasourceConfigQueryWrapper.eq("id", datasourceConfigId);
             DynamicAPIDatasourceConfig dynamicAPIDatasourceConfig = dynamicAPIDatasourceConfigMapper.selectOne(dynamicAPIDatasourceConfigQueryWrapper);
             // 2. handle the sql for execute
+            //取消select 可以随意选择功能，直接写死select部分（2/3)
             // 2.1 handle with select part
-            String selectStr;
-            if (!searchDTO.getSelectList().isEmpty()) {
-                String selectParam = searchDTO.getSelectList().toString().replace("[", "").replace("]", "");
-                selectStr = selectHandler(selectParam, dynamicAPIMainConfig.getSelectList());
-            } else {
-                selectStr = dynamicAPIMainConfig.getSelectList();
-            }
+//            String selectStr;
+//            if (!searchDTO.getSelectList().isEmpty()) {
+//                String selectParam = searchDTO.getSelectList().toString().replace("[", "").replace("]", "");
+//                selectStr = selectHandler(selectParam, dynamicAPIMainConfig.getSelectList());
+//            } else {
+//                selectStr = dynamicAPIMainConfig.getSelectList();
+//            }
+
 
             // 2.2 handle with where part
             List<Param> paramsRequest = searchDTO.getParamsList();
@@ -85,7 +87,8 @@ public class JDBCServiceImpl implements JDBCService {
             List<DynamicAPIParamsConfig> paramsFromTable = dynamicAPIParamsConfigMapper.selectList(dynamicAPIParamsConfigQueryWrapper);
             String whereStr = whereHandler(paramsRequest, paramsFromTable);
             String sqlSentence = dynamicAPIMainConfig.getSqlSentence();
-            sqlSentence = sqlSentence.replace("*", selectStr);
+            //取消select 可以随意选择功能，直接写死select部分（3/3)
+//            sqlSentence = sqlSentence.replace("*", selectStr);
             // 3. 创建JDBC连接
             return JDBCUtil.executeSql(dynamicAPIDatasourceConfig.getDatasourceUrl(), dynamicAPIDatasourceConfig.getDatasourceDriverClassname(), dynamicAPIDatasourceConfig.getDatasourceUsername(), dynamicAPIDatasourceConfig.getDatasourcePassword(), sqlSentence+whereStr);
         } catch (SQLException e) {

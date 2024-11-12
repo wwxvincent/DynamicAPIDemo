@@ -73,7 +73,9 @@ public class CreateApiServiceImpl implements CreateApiService {
         int datasourceId = resultList.get(0).getDatasourceId();
 
         String selectStr = apiConfig.getSelectList().toString().replace("[", "").replace("]", "");
-        String sb = "select * from " + apiConfig.getSourceTable() + " where (1=1) "; // 用的时候，用select来替换掉*
+//        String sb = "select * from " + apiConfig.getSourceTable() + " where (1=1) "; // 用的时候，用select来替换掉*
+        //取消select 可以随意选择功能，直接写死select部分（1/3)
+        String sb = "select "+ selectStr + " from " + apiConfig.getSourceTable() + " where (1=1) "; // 用的时候，用select来替换掉*
         // 2. 存入绑定关系表，API配置主表
         DynamicAPIMainConfig dynamicAPIMainConfig = new DynamicAPIMainConfig();
         dynamicAPIMainConfig.setPath(apiConfig.getPath());
