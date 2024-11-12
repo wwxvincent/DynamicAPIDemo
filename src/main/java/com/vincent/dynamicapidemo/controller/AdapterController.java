@@ -16,6 +16,7 @@ import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.service.CreateApiService;
 import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
 import com.vincent.dynamicapidemo.service.JDBCService;
+import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import com.vincent.dynamicapidemo.util.RedisUtils;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -67,24 +68,22 @@ public class AdapterController {
 
     @PostConstruct
     public void init() throws NoSuchMethodException {
-//        loadExistingMappings();
+        loadExistingMappings();
     }
     private void loadExistingMappings() throws NoSuchMethodException {
         RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
 
         List<DynamicAPIMainConfig> existingMappings = dynamicAPIMainConfigService.getExistingMappingInfo();
         if (!existingMappings.isEmpty()) {
-            for (DynamicAPIMainConfig dynamicAPIMainConfig : existingMappings) {
-                // 从DB中获取配置信息，重新绑定API。
-                RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(dynamicAPIMainConfig.getPath())
-                        .methods(RequestMethod.valueOf(dynamicAPIMainConfig.getMethod()))
-                        .build();
-                bean.registerMapping(requestMappingInfo, dynamicAPIMainConfig.getHandler(), AdapterController.class.getDeclaredMethod(dynamicAPIMainConfig.getTargetMethodName(), SearchDTO.class, HttpServletRequest.class));
+            for (DynamicAPIMainConfig dynamicAPIMainConfig : existingMappings) { // 从DB中获取配置信息，重新绑定API。
+                // 注册动态路由，绑定url和目标方法
+                DynamicApiUtil.create(bean, dynamicAPIMainConfig.getPath(), dynamicAPIMainConfig.getMethod(), dynamicAPIMainConfig.getHandler(), dynamicAPIMainConfig.getTargetMethodName());
+                // 注册sentinel信息
                 // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
-                String contextPath = env.getProperty("server.servlet.context-path");
-                SentinelConfigUtil.initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
+                String sourceName = env.getProperty("server.servlet.context-path") + dynamicAPIMainConfig.getPath();
+                SentinelConfigUtil.initFlowRules(sourceName);
 
-                log.info("<===== load dynamic API: " + dynamicAPIMainConfig.toString());
+                log.info("<===== load dynamic API: " + dynamicAPIMainConfig.getApiName()+" : " +dynamicAPIMainConfig.getId());
             }
 
             log.info("Successfully loaded all existing register mappings from database.");
@@ -94,86 +93,70 @@ public class AdapterController {
 
     }
 
-//    // 配置sentinel中的限流降级默认配置
-//    private static void initFlowRules(String resourceName) {
-//        List<FlowRule> rules = FlowRuleManager.getRules();
-//        FlowRule rule = new FlowRule();
-//        rule.setResource(resourceName);
-//        rule.setGrade(RuleConstant.FLOW_GRADE_QPS);
-//        // 设置每秒的通行数为1
-//        rule.setCount(1);
-//        rules.add(rule);
-//        FlowRuleManager.loadRules(rules);
-//    }
 
-    @Autowired
-    private RedisUtils redisUtils;
 
+
+    /**
+     * 模拟 往redis里发送topic
+     * 1. 模拟本机发送topic，用ip addr 192.168.10.76
+     * 1. 模拟集群其他服务发送topic，用ip addr 192.168.0.30
+     * @param ipAddr
+     * @param configId
+     * @return
+     */
     @GetMapping("/redis/test")
-    public String testRedis() throws JsonProcessingException {
+    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
         // 发布路由同步消息到Redis 频道
-        RouteSyncMessage routeSyncMessage = new RouteSyncMessage();
-        routeSyncMessage.setPath("/test");
-        routeSyncMessage.setMethod("POST");
-        routeSyncMessage.setHandler("adapterController");
-        routeSyncMessage.setTargetMethodName("dynamicApiMethodSQL");
-        System.out.println(currentNodeId);
+        redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
 
-//        ObjectMapper objectMapper = new ObjectMapper();
-//        String jsonMessage = objectMapper.writeValueAsString(routeSyncMessage);
-
-//        redisUtils.convertAndSend("api_sync_channel", routeSyncMessage);
-
-        redisTemplate.convertAndSend("api_sync_channel", 37);
-
-//        redisTemplate.convertAndSend("api_sync_channel", routeSyncMessage);
 
         return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
 
     }
 
-    @Value("${app.current-node-id}")
-    private String currentNodeId;
+
     @PostMapping("/api/create")
     public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
+        // 获取完整的url
         String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
         if (dynamicAPIMainConfigService.checkExisted(url)) {
             return "Sorry bro, this url already existed! Change one!";
         }
-        try {
-            RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(apiConfig.getPath())
-                    .methods(RequestMethod.valueOf(apiConfig.getMethod()))
-                    .build();
-            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("dynamicApiMethodSQL", SearchDTO.class, HttpServletRequest.class));
 
-            // 注册sentinel信息
-            SentinelConfigUtil.initFlowRules(request.getContextPath() +  apiConfig.getPath());
-
-            //存入到db
-            int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
-            System.out.println("瓜西 看这里，看是不是对的"+apiConfigId);
-            // 发布路由同步消息到Redis 频道
-//            RouteSyncMessage routeSyncMessage = new RouteSyncMessage();
-//            routeSyncMessage.setPath(apiConfig.getPath());
-//            routeSyncMessage.setMethod(apiConfig.getMethod());
-//            routeSyncMessage.setHandler("adapterController");
-//            routeSyncMessage.setTargetMethodName(apiConfig.getMethod());
-//
-//            redisTemplate.convertAndSend("api_sync_channel", routeSyncMessage);
-
-            String message = currentNodeId + ":" + apiConfigId;
-            redisTemplate.convertAndSend("api_sync_channel", message);
-
-
-            return "success bro, tyr this: " + url;
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-            return "Error: " + e.getMessage();
+        /**
+         * Direct to different binding method based on creation way
+          */
+        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+        String targetMethodName;
+        switch (apiConfig.getCreateType()) {
+            case "TABLE":
+                targetMethodName = "dynamicApiMethodTable";
+                break;
+            case "SQL":
+                targetMethodName = "dynamicApiMethodSql";
+                break;
+            default:
+                targetMethodName = "defaultMethod"; // 如果没有匹配到，可以设置默认方法名
+                break;
         }
+
+        // 注册动态路由，绑定url和目标方法
+        DynamicApiUtil.create(bean, apiConfig.getPath(), apiConfig.getMethod(), "adapterController",targetMethodName);
+        // 注册sentinel信息
+        SentinelConfigUtil.initFlowRules(request.getContextPath() +  apiConfig.getPath());
+        // 存入到db
+        int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", "dynamicApiMethodSQL",url);
+
+        // 发送topic到redis中
+        String message = DynamicApiUtil.getIpAddr() + ":" + apiConfigId;
+        redisTemplate.convertAndSend("api_sync_channel", message);
+
+        return "success bro, tyr this: " + url;
+
     }
-    //targetMethod for mysql now
-    public ResponseVO dynamicApiMethodSQL(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
+
+    //targetMethod for create api by table
+    public ResponseVO dynamicApiMethodTable(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
         String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
         ResponseVO responseVO = new ResponseVO();
         Entry entry = null;
@@ -190,6 +173,17 @@ public class AdapterController {
                 entry.exit();
             }
         }
+    }
+
+    //targetMethod for create api by table
+    public ResponseVO dynamicApiMethodSql(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
+        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
+        ResponseVO responseVO = new ResponseVO();
+        /**
+         * to do
+         */
+
+        return null;
     }
 
 

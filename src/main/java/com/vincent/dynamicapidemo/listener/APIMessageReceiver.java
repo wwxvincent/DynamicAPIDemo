@@ -7,6 +7,7 @@ import com.vincent.dynamicapidemo.entity.DTO.RouteSyncMessage;
 import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIMainConfigMapper;
+import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 
 import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
-import java.nio.ByteBuffer;
+import java.util.Objects;
 
 
 import static com.vincent.dynamicapidemo.util.SentinelConfigUtil.initFlowRules;
@@ -39,7 +40,6 @@ public class APIMessageReceiver implements MessageListener {
     @Autowired
     private ApplicationContext applicationContext;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private Environment env;
@@ -47,8 +47,7 @@ public class APIMessageReceiver implements MessageListener {
     @Autowired
     private DynamicAPIMainConfigMapper dynamicAPIMainConfigMapper;
 
-    @Value("${app.current-node-id}")
-    private String currentNodeId;
+
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -60,9 +59,9 @@ public class APIMessageReceiver implements MessageListener {
             }            String[] parts = messageBody.split(":", 2);
             int messageId = -1;
             System.out.println("p1: "+parts[0]);
-            System.out.println("curId: "+currentNodeId);
-            System.out.println(!currentNodeId.equals(parts[0]));
-            if (!currentNodeId.equals(parts[0])) {
+            System.out.println("curId: "+ DynamicApiUtil.getIpAddr() );
+            System.out.println(!Objects.equals(DynamicApiUtil.getIpAddr(), parts[0]));
+            if (!Objects.equals(DynamicApiUtil.getIpAddr(), parts[0])) {
                 try {
                     messageId = Integer.parseInt(parts[1]);
                     System.out.println("messageId: " + messageId);
