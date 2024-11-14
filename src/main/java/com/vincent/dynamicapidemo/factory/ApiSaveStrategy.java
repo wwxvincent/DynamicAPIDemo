@@ -9,6 +9,6 @@ import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
  *                  Simple Factory Pattern implement
  */
 public interface ApiSaveStrategy {
-    int saveConfig (ApiConfig apiConfig, String handler, String url);
+    String saveConfig (ApiConfig apiConfig, String handler, String url);
     String getTargetMethodName();
 }

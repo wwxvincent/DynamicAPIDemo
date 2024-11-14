@@ -92,7 +92,7 @@ public class AdapterController {
         }
 
         // 存入到db，then 执行路由绑定和sentinel其实设置
-        int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", url);
+        String apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", url);
 
         return "success bro, tyr this: " + url + "\n" +"main config ID: " + apiConfigId;
 

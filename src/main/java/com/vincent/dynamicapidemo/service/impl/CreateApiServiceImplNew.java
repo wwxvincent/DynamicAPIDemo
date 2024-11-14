@@ -39,12 +39,12 @@ public class CreateApiServiceImplNew implements CreateApiService {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int saveConfig(ApiConfig apiConfig, String handler, String url) {
+    public String saveConfig(ApiConfig apiConfig, String handler, String url) {
 
         // 使用工厂方法获取对应的策略
         ApiSaveStrategy strategy = apiSaveFactory.getStrategy(apiConfig.getCreateType());
         // 调用具体策略的保存方法
-        int apiConfigId = strategy.saveConfig(apiConfig, handler, url);
+        String apiConfigId = strategy.saveConfig(apiConfig, handler, url);
         String targetMethodName = strategy.getTargetMethodName();
         /**
          * 存储完 数据库，注册动态路由 和

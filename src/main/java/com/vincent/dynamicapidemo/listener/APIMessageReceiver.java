@@ -1,28 +1,19 @@
 package com.vincent.dynamicapidemo.listener;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vincent.dynamicapidemo.controller.AdapterController;
-import com.vincent.dynamicapidemo.entity.DTO.MessageDTO;
-import com.vincent.dynamicapidemo.entity.DTO.RouteSyncMessage;
-import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
+
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIMainConfigMapper;
 import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
-import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 
@@ -56,13 +47,13 @@ public class APIMessageReceiver implements MessageListener {
             if (messageBody.startsWith("\"") && messageBody.endsWith("\"")) {
                 messageBody = messageBody.substring(1, messageBody.length() - 1);
             }            String[] parts = messageBody.split(":", 2);
-            int messageId = -1;
+            String messageId = "";
             log.debug("###### Redis info ###### ip address from Redis topic: "+parts[0]);
             log.debug("###### Redis info ###### ip addr for local machine: "+ DynamicApiUtil.getIpAddr());
             log.debug("###### Redis info ###### message of this message: "+parts[1]);
             if (!Objects.equals(DynamicApiUtil.getIpAddr(), parts[0])) {
                 try {
-                    messageId = Integer.parseInt(parts[1]);
+                    messageId = parts[1];
                     log.debug("###### Redis info ###### messageId: " + messageId);
                 } catch (NumberFormatException e) {
                     log.debug("###### Redis info ###### 无法将消息转换为int: " + messageBody);

@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @TableName("dynamic_API_main_config")
 public class DynamicAPIMainConfig {
     @TableId(type = IdType.AUTO)
-    private Integer id; // 假设 ID 类型是 Integer
+    private String id; // 假设 ID 类型是 Integer
     private String path;
     private String method;
     private String handler;

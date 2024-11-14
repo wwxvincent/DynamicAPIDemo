@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
@@ -45,12 +46,12 @@ public class TableSaveStrategyImpl implements ApiSaveStrategy {
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int saveConfig(ApiConfig apiConfig, String handler, String url) {
+    public String saveConfig(ApiConfig apiConfig, String handler, String url) {
 
         // 0. Check whether this URL is unique"。
         if(dynamicAPIMainConfigService.checkExisted(url)) {
             log.info("<===== Invalid url !!!! This url already existed");
-            return -1;
+            return null;
         }
 
         // 1. 查询数据字典表，获取数据库连接配置表id
@@ -69,6 +70,8 @@ public class TableSaveStrategyImpl implements ApiSaveStrategy {
         String sb = "select "+ selectStr + " from " + apiConfig.getSourceTable() + " where (1=1) "; // 用的时候，用select来替换掉*
         // 2. 存入绑定关系表，API配置主表
         DynamicAPIMainConfig dynamicAPIMainConfig = new DynamicAPIMainConfig();
+        String mainUuid = UUID.randomUUID().toString();
+        dynamicAPIMainConfig.setId(mainUuid);
         dynamicAPIMainConfig.setPath(apiConfig.getPath());
         dynamicAPIMainConfig.setMethod(apiConfig.getMethod());
         dynamicAPIMainConfig.setHandler(handler);
@@ -82,12 +85,13 @@ public class TableSaveStrategyImpl implements ApiSaveStrategy {
         dynamicAPIMainConfig.setStatus("1");
         dynamicAPIMainConfigMapper.insert(dynamicAPIMainConfig);
 
-        int mainId = dynamicAPIMainConfig.getId();
+//        int mainId = dynamicAPIMainConfig.getId();
 
         // 3. 存入参明细表 where
         for (Param p : apiConfig.getParamsList()) {
             DynamicAPIParamsConfig paramsConfig = new DynamicAPIParamsConfig();
-            paramsConfig.setMainConfigId(mainId);
+            paramsConfig.setId(UUID.randomUUID().toString());
+            paramsConfig.setMainConfigId(mainUuid);
             paramsConfig.setSort(p.getSort());
             paramsConfig.setParamName(p.getParam_name());
             paramsConfig.setParamValue(p.getParam_value());
@@ -98,7 +102,7 @@ public class TableSaveStrategyImpl implements ApiSaveStrategy {
             paramsConfig.setSample(p.getSample());
             dynamicAPIParamsConfigMapper.insert(paramsConfig);
         }
-        return mainId;
+        return mainUuid;
     }
 
     @Override
