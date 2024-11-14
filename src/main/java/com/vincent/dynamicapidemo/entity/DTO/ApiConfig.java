@@ -25,6 +25,9 @@ public class ApiConfig {
     private String sourceTable;
     private List<String> selectList;
     private List<Param> paramsList;
+    // for sql part only
+    private String returnType;
+    private String sqlSentence;
 
 
 }

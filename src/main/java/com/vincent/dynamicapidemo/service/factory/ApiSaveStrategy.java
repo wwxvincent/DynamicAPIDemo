@@ -1,4 +1,4 @@
-package com.vincent.dynamicapidemo.factory;
+package com.vincent.dynamicapidemo.service.factory;
 
 import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
 

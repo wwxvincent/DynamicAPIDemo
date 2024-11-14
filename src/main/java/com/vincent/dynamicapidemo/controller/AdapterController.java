@@ -94,7 +94,7 @@ public class AdapterController {
         // 存入到db，then 执行路由绑定和sentinel其实设置
         String apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", url);
 
-        return "success bro, tyr this: " + url + "\n" +"main config ID: " + apiConfigId;
+        return "success bro, tyr this: " + url + "\n" +"Check it in Redis <==> main config ID: " + apiConfigId;
 
     }
 
@@ -102,8 +102,8 @@ public class AdapterController {
     public ResponseVO dynamicApiMethodTable(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
         String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
         ResponseVO responseVO = new ResponseVO();
-        Entry entry = null;
 
+        Entry entry = null;
         try {
             entry = SphU.entry(request.getContextPath() + request.getServletPath());
             System.out.println("11   业务逻辑被保护");
@@ -125,8 +125,9 @@ public class AdapterController {
         /**
          * to do
          */
+        responseVO.setMsg("yo, you made it bro!");
 
-        return null;
+        return responseVO;
     }
 
 

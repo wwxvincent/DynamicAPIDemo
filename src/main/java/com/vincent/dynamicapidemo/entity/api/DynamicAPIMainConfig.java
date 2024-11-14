@@ -30,5 +30,6 @@ public class DynamicAPIMainConfig {
     private String selectList;
     private String sqlSentence;
     private String status;
+    private String returnType;
 
 }

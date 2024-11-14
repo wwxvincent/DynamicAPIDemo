@@ -1,6 +1,7 @@
-package com.vincent.dynamicapidemo.factory;
+package com.vincent.dynamicapidemo.service.factory;
 
-import com.vincent.dynamicapidemo.factory.impl.TableSaveStrategyImpl;
+import com.vincent.dynamicapidemo.service.factory.impl.SqlSaveStrategyImpl;
+import com.vincent.dynamicapidemo.service.factory.impl.TableSaveStrategyImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -16,13 +17,15 @@ public class ApiSaveFactory {
     @Autowired
     private TableSaveStrategyImpl tableSaveStrategyImpl;
 
+    @Autowired
+    private SqlSaveStrategyImpl sqlSaveStrategyImpl;
+
     public ApiSaveStrategy getStrategy(String type) {
         switch (type.toUpperCase()) {
             case "TABLE":
                 return tableSaveStrategyImpl;
             case "SQL":
-                // 可以添加SQL策略类
-                throw new UnsupportedOperationException("SQL save strategy not implemented yet");
+                return sqlSaveStrategyImpl;
             case "JAR":
                 // 可以添加JAR策略类
                 throw new UnsupportedOperationException("JAR save strategy not implemented yet");
