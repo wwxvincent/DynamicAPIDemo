@@ -41,9 +41,11 @@ public class TableSaveStrategyImpl implements ApiSaveStrategy {
     @Autowired
     private DynamicAPIParamsConfigMapper dynamicAPIParamsConfigMapper;
 
+    private final String targetMethodName = "dynamicApiMethodTable";
+
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public int saveConfig(ApiConfig apiConfig, String handler, String targetMethodName, String url) {
+    public int saveConfig(ApiConfig apiConfig, String handler, String url) {
 
         // 0. Check whether this URL is unique"。
         if(dynamicAPIMainConfigService.checkExisted(url)) {
@@ -98,4 +100,11 @@ public class TableSaveStrategyImpl implements ApiSaveStrategy {
         }
         return mainId;
     }
+
+    @Override
+    public String getTargetMethodName() {
+        return this.targetMethodName;
+    }
+
+
 }

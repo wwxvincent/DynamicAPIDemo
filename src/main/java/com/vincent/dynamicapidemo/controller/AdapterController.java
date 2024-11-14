@@ -83,32 +83,6 @@ public class AdapterController {
 
     }
 
-
-
-
-    /**
-     * 模拟 往redis里发送topic
-     * 1. 模拟本机发送topic，用ip addr 192.168.10.76
-     * 1. 模拟集群其他服务发送topic，用ip addr 192.168.0.30
-     * @param ipAddr
-     * @param configId
-     * @return
-     */
-    @GetMapping("/redis/test")
-    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
-        // 发布路由同步消息到Redis 频道
-        try {
-            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
-        } catch (Exception e) {
-            return e.getMessage();
-       }
-
-
-        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
-
-    }
-
-
     @PostMapping("/api/create")
     public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
         // 获取完整的url
@@ -117,39 +91,10 @@ public class AdapterController {
             return "Sorry bro, this url already existed! Change one!";
         }
 
-        /**
-         * Direct to different binding method based on creation way
-          */
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        String targetMethodName;
-        String message = DynamicApiUtil.getIpAddr() + ":";
-        switch (apiConfig.getCreateType()) {
-            case "TABLE":
-                targetMethodName = "dynamicApiMethodTable";
-                break;
-            case "SQL":
-                targetMethodName = "dynamicApiMethodSql";
-                break;
-            case "JAR":
-                targetMethodName = "dynamicApiMethodJar";
-                break;
-            default:
-                targetMethodName = "defaultMethod"; // 如果没有匹配到，可以设置默认方法名
-                break;
-        }
+        // 存入到db，then 执行路由绑定和sentinel其实设置
+        int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", url);
 
-        // 注册动态路由，绑定url和目标方法
-        DynamicApiUtil.create(bean, apiConfig.getPath(), apiConfig.getMethod(), "adapterController",targetMethodName);
-        // 注册sentinel信息
-        SentinelConfigUtil.initFlowRules(request.getContextPath() +  apiConfig.getPath());
-        // 存入到db
-        int apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", targetMethodName,url);
-        // 组装传到redis中的topic
-        message = message + apiConfigId;
-        // 发送topic到redis中
-        redisTemplate.convertAndSend("api_sync_channel", message);
-
-        return "success bro, tyr this: " + url;
+        return "success bro, tyr this: " + url + "\n" +"main config ID: " + apiConfigId;
 
     }
 
@@ -185,7 +130,27 @@ public class AdapterController {
     }
 
 
+    /**
+     * 模拟 往redis里发送topic
+     * 1. 模拟本机发送topic，用ip addr 192.168.10.76
+     * 1. 模拟集群其他服务发送topic，用ip addr 192.168.0.30
+     * @param ipAddr
+     * @param configId
+     * @return
+     */
+    @GetMapping("/redis/test")
+    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
+        // 发布路由同步消息到Redis 频道
+        try {
+            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
+        } catch (Exception e) {
+            return e.getMessage();
+        }
 
+
+        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
+
+    }
 
 //    @GetMapping("/create2")
 //    public String create2() throws NoSuchMethodException {

@@ -70,7 +70,7 @@ public class APIMessageReceiver implements MessageListener {
                 DynamicAPIMainConfig dynamicAPIMainConfig = dynamicAPIMainConfigMapper.selectById(messageId);
                 if(dynamicAPIMainConfig==null){
                     log.debug("Invalid dynamic api config ID from redis message");
-                    return;
+                    throw new RuntimeException("Invalid dynamic api config ID from redis message, do not exist in database");
                 }
                 RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
 

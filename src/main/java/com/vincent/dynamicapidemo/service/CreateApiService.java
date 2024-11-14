@@ -9,5 +9,5 @@ import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
  */
 public interface CreateApiService {
 
-    int saveConfig(ApiConfig apiConfig, String handler, String targetMethodName, String url);
+    int saveConfig(ApiConfig apiConfig, String handler, String url);
 }
