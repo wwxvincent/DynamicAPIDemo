@@ -126,7 +126,6 @@ public class AdapterController {
         switch (apiConfig.getCreateType()) {
             case "TABLE":
                 targetMethodName = "dynamicApiMethodTable";
-
                 break;
             case "SQL":
                 targetMethodName = "dynamicApiMethodSql";

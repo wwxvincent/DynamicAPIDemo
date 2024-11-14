@@ -67,8 +67,11 @@ public class JDBCServiceImpl implements JDBCService {
             QueryWrapper<DynamicAPIDatasourceConfig> dynamicAPIDatasourceConfigQueryWrapper = new QueryWrapper<>();
             dynamicAPIDatasourceConfigQueryWrapper.eq("id", datasourceConfigId);
             DynamicAPIDatasourceConfig dynamicAPIDatasourceConfig = dynamicAPIDatasourceConfigMapper.selectOne(dynamicAPIDatasourceConfigQueryWrapper);
+
             // 2. handle the sql for execute
-            //取消select 可以随意选择功能，直接写死select部分（2/3)
+            /**
+             *  取消select 可以随意选择功能，直接写死select部分（2/4)
+             */
             // 2.1 handle with select part
 //            String selectStr;
 //            if (!searchDTO.getSelectList().isEmpty()) {
@@ -87,7 +90,9 @@ public class JDBCServiceImpl implements JDBCService {
             List<DynamicAPIParamsConfig> paramsFromTable = dynamicAPIParamsConfigMapper.selectList(dynamicAPIParamsConfigQueryWrapper);
             String whereStr = whereHandler(paramsRequest, paramsFromTable);
             String sqlSentence = dynamicAPIMainConfig.getSqlSentence();
-            //取消select 可以随意选择功能，直接写死select部分（3/3)
+            /**
+             *  取消select 可以随意选择功能，直接写死select部分（3/4)
+             */
 //            sqlSentence = sqlSentence.replace("*", selectStr);
             // 3. 创建JDBC连接
             return JDBCUtil.executeSql(dynamicAPIDatasourceConfig.getDatasourceUrl(), dynamicAPIDatasourceConfig.getDatasourceDriverClassname(), dynamicAPIDatasourceConfig.getDatasourceUsername(), dynamicAPIDatasourceConfig.getDatasourcePassword(), sqlSentence+whereStr);
@@ -99,19 +104,23 @@ public class JDBCServiceImpl implements JDBCService {
 
 
     }
-    private String selectHandler( String selectParam, String selectFromTable) {
-        // 2.1 compare selectParam and selectFromTable
-        List<String> selectFromTableList = Arrays.asList(selectFromTable.split(","));
-        Set<String> selectParamSet = Arrays.stream(selectParam.split(","))
-                .map(String::trim)
-                .collect(Collectors.toSet());
-        // 保留 selectFromTableList 中的元素且这些元素也出现在 selectParamSet 中
-        List<String> resultList = selectFromTableList.stream()
-                .map(String::trim) // 去除空格
-                .filter(selectParamSet::contains) // 仅保留在 selectParamSet 中的元素
-                .collect(Collectors.toList());
-        return resultList.toString().replace("[", "").replace("]", "");
-    }
+
+    /**
+     *  取消select 可以随意选择功能，直接写死select部分（4/4)
+     */
+//    private String selectHandler( String selectParam, String selectFromTable) {
+//        // 2.1 compare selectParam and selectFromTable
+//        List<String> selectFromTableList = Arrays.asList(selectFromTable.split(","));
+//        Set<String> selectParamSet = Arrays.stream(selectParam.split(","))
+//                .map(String::trim)
+//                .collect(Collectors.toSet());
+//        // 保留 selectFromTableList 中的元素且这些元素也出现在 selectParamSet 中
+//        List<String> resultList = selectFromTableList.stream()
+//                .map(String::trim) // 去除空格
+//                .filter(selectParamSet::contains) // 仅保留在 selectParamSet 中的元素
+//                .collect(Collectors.toList());
+//        return resultList.toString().replace("[", "").replace("]", "");
+//    }
 
     private String whereHandler(List<Param> paramsRequest, List<DynamicAPIParamsConfig> paramsFromTable) {
         if (paramsRequest.isEmpty()) return "";
