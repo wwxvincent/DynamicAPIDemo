@@ -6,11 +6,11 @@ import com.vincent.dynamicapidemo.entity.DTO.Param;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIDict;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
-import com.vincent.dynamicapidemo.service.factory.ApiSaveStrategy;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIDictMapper;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIMainConfigMapper;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIParamsConfigMapper;
 import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
+import com.vincent.dynamicapidemo.service.factory.ApiStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -27,7 +27,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-public class TableSaveStrategyImpl implements ApiSaveStrategy {
+public class TableStrategyImpl implements ApiStrategy {
 
     // 确认原型后
     @Autowired

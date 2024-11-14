@@ -1,7 +1,7 @@
 package com.vincent.dynamicapidemo.service.factory;
 
-import com.vincent.dynamicapidemo.service.factory.impl.SqlSaveStrategyImpl;
-import com.vincent.dynamicapidemo.service.factory.impl.TableSaveStrategyImpl;
+import com.vincent.dynamicapidemo.service.factory.impl.SqlStrategyImpl;
+import com.vincent.dynamicapidemo.service.factory.impl.TableStrategyImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -11,21 +11,21 @@ import org.springframework.stereotype.Component;
  * @Description:
  */
 @Component
-public class ApiSaveFactory {
+public class ApiFactory {
 
 
     @Autowired
-    private TableSaveStrategyImpl tableSaveStrategyImpl;
+    private TableStrategyImpl tableStrategyImpl;
 
     @Autowired
-    private SqlSaveStrategyImpl sqlSaveStrategyImpl;
+    private SqlStrategyImpl sqlStrategyImpl;
 
-    public ApiSaveStrategy getStrategy(String type) {
+    public ApiStrategy getStrategy(String type) {
         switch (type.toUpperCase()) {
             case "TABLE":
-                return tableSaveStrategyImpl;
+                return tableStrategyImpl;
             case "SQL":
-                return sqlSaveStrategyImpl;
+                return sqlStrategyImpl;
             case "JAR":
                 // 可以添加JAR策略类
                 throw new UnsupportedOperationException("JAR save strategy not implemented yet");

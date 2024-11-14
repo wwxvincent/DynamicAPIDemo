@@ -8,9 +8,8 @@ import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIMainConfigMapper;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIParamsConfigMapper;
-import com.vincent.dynamicapidemo.service.factory.ApiSaveStrategy;
+import com.vincent.dynamicapidemo.service.factory.ApiStrategy;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIDictMapper;
-import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,7 @@ import java.util.*;
  */
 @Service
 @Slf4j
-public class SqlSaveStrategyImpl implements ApiSaveStrategy {
+public class SqlStrategyImpl implements ApiStrategy {
 
     private final String targetMethodName = "dynamicApiMethodSql";
 

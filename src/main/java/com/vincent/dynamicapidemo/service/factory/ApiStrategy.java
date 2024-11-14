@@ -8,7 +8,7 @@ import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
  * @Description: 将动态API路由注册的配置及相关联参数 的 存入方式，改为 应用简单工厂模式 实现
  *                  Simple Factory Pattern implement
  */
-public interface ApiSaveStrategy {
+public interface ApiStrategy {
     String saveConfig (ApiConfig apiConfig, String handler, String url);
     String getTargetMethodName();
 }

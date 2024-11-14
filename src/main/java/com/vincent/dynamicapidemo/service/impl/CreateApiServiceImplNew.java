@@ -1,8 +1,8 @@
 package com.vincent.dynamicapidemo.service.impl;
 
 import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
-import com.vincent.dynamicapidemo.service.factory.ApiSaveFactory;
-import com.vincent.dynamicapidemo.service.factory.ApiSaveStrategy;
+import com.vincent.dynamicapidemo.service.factory.ApiFactory;
+import com.vincent.dynamicapidemo.service.factory.ApiStrategy;
 import com.vincent.dynamicapidemo.service.CreateApiService;
 import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
@@ -35,14 +35,14 @@ public class CreateApiServiceImplNew implements CreateApiService {
     private Environment env;
 
     @Autowired
-    private ApiSaveFactory apiSaveFactory;
+    private ApiFactory apiFactory;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public String saveConfig(ApiConfig apiConfig, String handler, String url) {
 
         // 使用工厂方法获取对应的策略
-        ApiSaveStrategy strategy = apiSaveFactory.getStrategy(apiConfig.getCreateType());
+        ApiStrategy strategy = apiFactory.getStrategy(apiConfig.getCreateType());
         // 调用具体策略的保存方法
         String apiConfigId = strategy.saveConfig(apiConfig, handler, url);
         String targetMethodName = strategy.getTargetMethodName();
