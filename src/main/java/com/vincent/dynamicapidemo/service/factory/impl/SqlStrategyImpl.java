@@ -30,7 +30,8 @@ import java.util.*;
 @Slf4j
 public class SqlStrategyImpl implements ApiStrategy {
 
-    private final String targetMethodName = "dynamicApiMethodSql";
+//    private final String targetMethodName = "dynamicApiMethodSql";
+    private final String targetMethodName = "dynamicApiMethod";
 
     @Autowired
     private DynamicAPIDictMapper dynamicAPIDictMapper;
@@ -73,6 +74,7 @@ public class SqlStrategyImpl implements ApiStrategy {
             DynamicAPIParamsConfig paramsConfig = new DynamicAPIParamsConfig();
             paramsConfig.setId(UUID.randomUUID().toString());
             paramsConfig.setMainConfigId(mainUuid);
+            paramsConfig.setCreateType(apiConfig.getCreateType());
             paramsConfig.setParamName(p.getParam_name());
             paramsConfig.setSort(p.getSort());
             paramsConfig.setParamValue(p.getParam_value());

@@ -16,6 +16,7 @@ import lombok.NoArgsConstructor;
 @TableName("dynamic_API_params_config")
 public class DynamicAPIParamsConfig {
     private String id;
+    private String createType;
     private String mainConfigId;
     private int sort;
     private String paramName;

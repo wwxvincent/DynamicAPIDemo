@@ -5,6 +5,8 @@ import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
 
 import java.util.*;
 
+import static org.apache.commons.lang.StringUtils.isNumeric;
+
 /**
  * @Author: Vincent(Wenxuan) Wang
  * @Date: 11/15/24
@@ -88,4 +90,37 @@ public class SqlProcessUtil {
 
         return placeHolderList;
     }
+
+    public static String whereHandler(List<Param> paramsFromRequest, List<DynamicAPIParamsConfig> paramsFromTable) {
+        if (paramsFromRequest.isEmpty()) return "";
+
+        Map<String, Object> paramsMap = new HashMap<>();
+        for (Param param : paramsFromRequest) {
+            paramsMap.put(param.getParam_name(), param.getParam_value());
+        }
+        StringBuilder sb = new StringBuilder();
+        for (DynamicAPIParamsConfig item : paramsFromTable) {
+
+            if (paramsMap.containsKey(item.getParamName())){ // 如果入参里有，加上
+                sb.append(" AND ").append(item.getParamName()).append(" ").append(item.getOperator()).append(" ");
+                if(!isNumeric(item.getParamValue())){
+                    sb.append("'").append(paramsMap.get(item.getParamName())).append("'").append("\n");
+                } else {
+                    sb.append(paramsMap.get(item.getParamName())).append("\n");
+                }
+
+            } else if (item.getRequired().equals("1")) { // 如果入参里面没有，但是这个是必填项，也加上，拿默认值
+                sb.append(" AND ").append(item.getParamName()).append(" ").append(item.getOperator()).append(" ");
+                if(!isNumeric(item.getParamValue())){
+                    sb.append("'").append(item.getDefaultValue()).append("'").append("\n");
+                } else {
+                    sb.append(item.getDefaultValue()).append("\n");
+                }
+
+
+            }
+        }
+        return sb.toString();
+    }
+
 }

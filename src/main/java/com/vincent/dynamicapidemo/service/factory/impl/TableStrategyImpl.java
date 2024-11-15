@@ -5,6 +5,7 @@ import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
 import com.vincent.dynamicapidemo.entity.DTO.Param;
 import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
 import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
+import com.vincent.dynamicapidemo.util.SqlProcessUtil;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIDict;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
@@ -13,11 +14,13 @@ import com.vincent.dynamicapidemo.mapper.DynamicAPIMainConfigMapper;
 import com.vincent.dynamicapidemo.mapper.DynamicAPIParamsConfigMapper;
 import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
 import com.vincent.dynamicapidemo.service.factory.ApiStrategy;
+import com.vincent.dynamicapidemo.util.JDBCUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
@@ -44,7 +47,8 @@ public class TableStrategyImpl implements ApiStrategy {
     @Autowired
     private DynamicAPIParamsConfigMapper dynamicAPIParamsConfigMapper;
 
-    private final String targetMethodName = "dynamicApiMethodTable";
+//    private final String targetMethodName = "dynamicApiMethodTable";
+    private final String targetMethodName = "dynamicApiMethod";
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -75,6 +79,7 @@ public class TableStrategyImpl implements ApiStrategy {
         String mainUuid = UUID.randomUUID().toString();
         dynamicAPIMainConfig.setId(mainUuid);
         dynamicAPIMainConfig.setCreateType(apiConfig.getCreateType());
+        dynamicAPIMainConfig.setCreateType(apiConfig.getCreateType());
         dynamicAPIMainConfig.setPath(apiConfig.getPath());
         dynamicAPIMainConfig.setMethod(apiConfig.getMethod());
         dynamicAPIMainConfig.setHandler(handler);
@@ -94,6 +99,7 @@ public class TableStrategyImpl implements ApiStrategy {
         for (Param p : apiConfig.getParamsList()) {
             DynamicAPIParamsConfig paramsConfig = new DynamicAPIParamsConfig();
             paramsConfig.setId(UUID.randomUUID().toString());
+            paramsConfig.setCreateType(apiConfig.getCreateType());
             paramsConfig.setMainConfigId(mainUuid);
 //            paramsConfig.setSort(p.getSort());
             paramsConfig.setParamName(p.getParam_name());
@@ -115,7 +121,18 @@ public class TableStrategyImpl implements ApiStrategy {
 
     @Override
     public ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO, String connUrl, String connDriverClassName, String connUsername, String connPassword, String sql, List<Param> paramsFromRequest, List<DynamicAPIParamsConfig> paramsFromTable) {
-        return null;
+        try {
+
+
+
+            // 2.2 handle with where part
+            String whereStr = SqlProcessUtil.whereHandler(paramsFromRequest, paramsFromTable);
+            // 3. 创建JDBC连接
+            return JDBCUtil.executeSql(connUrl, connDriverClassName, connUsername, connPassword, sql+whereStr);
+        } catch (SQLException | ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 
