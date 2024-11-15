@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -105,6 +106,55 @@ public class JDBCUtil {
             }
         }
     }
+
+    public static ResponseVO executeSqlWithPlaceHolder(String url, String className, String userName, String passWord, String sql, List<Object> paramsIndexList) throws SQLException, ClassNotFoundException {
+        //1、获取连接
+        log.debug(sql);
+        Connection connection = JDBCUtil.getConnection(url, className, userName, passWord);
+        try {
+            //2、创建预编译对象
+            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            //3、替换替换符内容
+            for (int i = 0; i < paramsIndexList.size(); i++) {
+                preparedStatement.setObject(i+1, paramsIndexList.get(i));
+            }
+            //4、执行SQL得到结果集
+            ResultSet result = preparedStatement.executeQuery();
+            //5、得到是否登录成功，成功就是为true,失败为False
+            int columnCount = result.getMetaData().getColumnCount();
+
+            List<String> columns = new ArrayList<>();
+            for(int i = 1; i <= columnCount; i++) {
+                columns.add(result.getMetaData().getColumnName(i));
+            }
+            List<JSONObject> list = new ArrayList<>();
+            while (result.next()) {
+                JSONObject object = new JSONObject();
+                columns.stream().forEach(column -> {
+                    try {
+                        Object value = result.getObject(column);
+                        object.put(column, value);
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                });
+                list.add(object);
+            }
+            return ResponseVO.apiSuccess(list);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return ResponseVO.fail(e.getMessage());
+        } finally {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        //6、释放资源
+
+    }
+
 
     public static ResponseVO executeSql(String url, String className, String userName, String passWord, String sql) throws SQLException, ClassNotFoundException {
         log.debug(sql);

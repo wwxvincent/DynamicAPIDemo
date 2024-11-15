@@ -3,6 +3,8 @@ package com.vincent.dynamicapidemo.service.factory.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
 import com.vincent.dynamicapidemo.entity.DTO.Param;
+import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
+import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIDict;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
@@ -72,6 +74,7 @@ public class TableStrategyImpl implements ApiStrategy {
         DynamicAPIMainConfig dynamicAPIMainConfig = new DynamicAPIMainConfig();
         String mainUuid = UUID.randomUUID().toString();
         dynamicAPIMainConfig.setId(mainUuid);
+        dynamicAPIMainConfig.setCreateType(apiConfig.getCreateType());
         dynamicAPIMainConfig.setPath(apiConfig.getPath());
         dynamicAPIMainConfig.setMethod(apiConfig.getMethod());
         dynamicAPIMainConfig.setHandler(handler);
@@ -108,6 +111,11 @@ public class TableStrategyImpl implements ApiStrategy {
     @Override
     public String getTargetMethodName() {
         return this.targetMethodName;
+    }
+
+    @Override
+    public ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO, String connUrl, String connDriverClassName, String connUsername, String connPassword, String sql, List<Param> paramsFromRequest, List<DynamicAPIParamsConfig> paramsFromTable) {
+        return null;
     }
 
 

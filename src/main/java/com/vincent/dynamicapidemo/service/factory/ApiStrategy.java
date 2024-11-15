@@ -1,6 +1,12 @@
 package com.vincent.dynamicapidemo.service.factory;
 
 import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
+import com.vincent.dynamicapidemo.entity.DTO.Param;
+import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
+import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
+import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
+
+import java.util.List;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
@@ -11,4 +17,5 @@ import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
 public interface ApiStrategy {
     String saveConfig (ApiConfig apiConfig, String handler, String url);
     String getTargetMethodName();
+    ResponseVO getDataFromDiffDBSource (SearchDTO searchDTO, String connUrl, String connDriverClassName, String connUsername, String connPassword, String sql, List<Param> paramsFromRequest, List<DynamicAPIParamsConfig> paramsFromTable);
 }

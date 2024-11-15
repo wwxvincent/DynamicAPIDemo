@@ -31,5 +31,6 @@ public class DynamicAPIMainConfig {
     private String sqlSentence;
     private String status;
     private String returnType;
+    private String createType;
 
 }

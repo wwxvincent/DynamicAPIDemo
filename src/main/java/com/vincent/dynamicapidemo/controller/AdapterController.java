@@ -7,9 +7,7 @@ import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
 import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
 import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
 import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
-import com.vincent.dynamicapidemo.service.CreateApiService;
-import com.vincent.dynamicapidemo.service.DynamicAPIMainConfigService;
-import com.vincent.dynamicapidemo.service.JDBCService;
+import com.vincent.dynamicapidemo.service.*;
 import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +45,9 @@ public class AdapterController {
 
     @Autowired
     private CreateApiService createApiService;
+
+    @Autowired
+    private UseApiService useService;
 
     @Autowired
     public AdapterController(WebApplicationContext applicationContext) {
@@ -125,9 +126,19 @@ public class AdapterController {
         /**
          * to do
          */
-        responseVO.setMsg("yo, you made it bro!");
-
-        return responseVO;
+        Entry entry = null;
+        try {
+            entry = SphU.entry(request.getContextPath() + request.getServletPath());
+            System.out.println("11   业务逻辑被保护");
+            return useService.getDataFromDiffDBSource(searchDTO, url);
+        } catch (Exception e) {
+            responseVO.setMsg(String.valueOf(e));
+            return responseVO;
+        } finally {
+            if (entry != null) {
+                entry.exit();
+            }
+        }
     }
 
 
