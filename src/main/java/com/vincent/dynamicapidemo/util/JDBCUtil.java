@@ -1,18 +1,12 @@
 package com.vincent.dynamicapidemo.util;
 
-import com.alibaba.druid.pool.DruidPooledConnection;
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.alibaba.druid.util.JdbcConstants;
 import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
-import com.vincent.dynamicapidemo.entity.DataSource;
-import com.vincent.dynamicapidemo.entity.api.DynamicAPIDatasourceConfig;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -29,18 +23,6 @@ public class JDBCUtil {
     }
 
     public static Connection getConnection(String url, String className, String userName, String passWord) throws SQLException, ClassNotFoundException {
-//        switch (dataSource.getDataBaseType()) {
-//            case JdbcConstants.MYSQL:
-//            case "doris":
-//                Class.forName(JdbcConstants.MYSQL_DRIVER_6);
-//                break;
-//            case JdbcConstants.HIVE:
-//                Class.forName(JdbcConstants.HIVE_DRIVER);
-//                break;
-//            default:
-//                break;
-//        }
-        //看className放在数据库中维护，还是在java中维护
         try {
             Class.forName(className);
         } catch (ClassNotFoundException e) {
@@ -51,61 +33,61 @@ public class JDBCUtil {
         return connection;
     }
 
-    public static ResponseVO executeSqlPool(DataSource datasource, String sql, List<Object> jdbcParamValues) throws SQLException {
-        log.debug(sql);
-//        log.debug(JSON.toJSONString(jdbcParamValues));
-        DruidPooledConnection connection = null;
-        try {
-            connection = PoolManager.getPooledConnection(datasource);
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
-            // 参数注入
-            //在 PreparedStatement 中，占位符 ? 是用来表示将要被替换的参数的位置。
-            // 当你使用 PreparedStatement 的 setObject 方法时，你需要指定每个参数的位置索引，
-            // 这个索引是从 1 开始的，而不是从 0 开始，这与数组或列表的索引不同。
-            for (int i = 1; i < jdbcParamValues.size(); i++) {
-                preparedStatement.setObject(i, jdbcParamValues.get(i-1));
-            }
-
-            boolean result = preparedStatement.execute();
-            if (result) {
-                ResultSet resultSet = preparedStatement.getResultSet();
-                int columnCount = resultSet.getMetaData().getColumnCount();
-
-                List<String> columns = new ArrayList<>();
-                for(int i = 1; i <= columnCount; i++) {
-                    columns.add(resultSet.getMetaData().getColumnName(i));
-                }
-                List<JSONObject> list = new ArrayList<>();
-                while (resultSet.next()) {
-                    JSONObject object = new JSONObject();
-                    columns.stream().forEach(column -> {
-                        try {
-                            Object value = resultSet.getObject(column);
-                            object.put(column, value);
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    });
-                    list.add(object);
-                }
-                return ResponseVO.apiSuccess(list);
-            } else {
-                int updateCount = preparedStatement.getUpdateCount();
-                return ResponseVO.apiSuccess("sql修改数据行数："+updateCount);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseVO.fail(e.getMessage());
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+//    public static ResponseVO executeSqlPool(DataSource datasource, String sql, List<Object> jdbcParamValues) throws SQLException {
+//        log.debug(sql);
+////        log.debug(JSON.toJSONString(jdbcParamValues));
+//        DruidPooledConnection connection = null;
+//        try {
+//            connection = PoolManager.getPooledConnection(datasource);
+//            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+//            // 参数注入
+//            //在 PreparedStatement 中，占位符 ? 是用来表示将要被替换的参数的位置。
+//            // 当你使用 PreparedStatement 的 setObject 方法时，你需要指定每个参数的位置索引，
+//            // 这个索引是从 1 开始的，而不是从 0 开始，这与数组或列表的索引不同。
+//            for (int i = 1; i < jdbcParamValues.size(); i++) {
+//                preparedStatement.setObject(i, jdbcParamValues.get(i-1));
+//            }
+//
+//            boolean result = preparedStatement.execute();
+//            if (result) {
+//                ResultSet resultSet = preparedStatement.getResultSet();
+//                int columnCount = resultSet.getMetaData().getColumnCount();
+//
+//                List<String> columns = new ArrayList<>();
+//                for(int i = 1; i <= columnCount; i++) {
+//                    columns.add(resultSet.getMetaData().getColumnName(i));
+//                }
+//                List<JSONObject> list = new ArrayList<>();
+//                while (resultSet.next()) {
+//                    JSONObject object = new JSONObject();
+//                    columns.stream().forEach(column -> {
+//                        try {
+//                            Object value = resultSet.getObject(column);
+//                            object.put(column, value);
+//                        } catch (SQLException e) {
+//                            e.printStackTrace();
+//                        }
+//                    });
+//                    list.add(object);
+//                }
+//                return ResponseVO.apiSuccess(list);
+//            } else {
+//                int updateCount = preparedStatement.getUpdateCount();
+//                return ResponseVO.apiSuccess("sql修改数据行数："+updateCount);
+//            }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseVO.fail(e.getMessage());
+//        } finally {
+//            try {
+//                if (connection != null) {
+//                    connection.close();
+//                }
+//            } catch (SQLException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
 
     public static ResponseVO executeSqlWithPlaceHolder(String url, String className, String userName, String passWord, String sql, List<Object> paramsIndexList) throws SQLException, ClassNotFoundException {
         //1、获取连接
@@ -194,14 +176,6 @@ public class JDBCUtil {
             e.printStackTrace();
             return ResponseVO.fail(e.getMessage());
         } finally {
-            // 关闭ResultSet
-//            if (resultSet != null) {
-//                try {
-//                    rs.close();
-//                } catch (SQLException e) {
-//                    e.printStackTrace();
-//                }
-//            }
             // 关闭Connection
             try {
                 connection.close();
@@ -275,7 +249,5 @@ public class JDBCUtil {
 //            }
 //        }
 //    }
-//    public static void main (String[] args) throws SQLException, ClassNotFoundException {
-//
-//    }
+
 }

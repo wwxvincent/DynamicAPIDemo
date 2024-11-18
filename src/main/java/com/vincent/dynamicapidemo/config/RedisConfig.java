@@ -2,12 +2,8 @@ package com.vincent.dynamicapidemo.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
-import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.vincent.dynamicapidemo.listener.APIMessageReceiver;
-import com.vincent.dynamicapidemo.listener.PrintMessageReceiver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -84,7 +80,7 @@ public class RedisConfig {
     */
     @Bean
     @SuppressWarnings("all")
-    public RedisMessageListenerContainer container(RedisConnectionFactory redisConnectionFactory, APIMessageReceiver receiver, MessageListenerAdapter adapter) {
+    public RedisMessageListenerContainer container(RedisConnectionFactory redisConnectionFactory, APIMessageReceiver receiver) {
 
         final String TOPIC_NAME = "api_sync_channel";
         final String TOPIC_NAME2 = "test_channel";
@@ -93,10 +89,10 @@ public class RedisConfig {
         container.setConnectionFactory(redisConnectionFactory);
         // 所有的订阅消息，都需要在这里进行注册绑定，new PatternTopic(TOPIC_NAME)表示发布的主题信息
         // 可以添加多个 messageListener， 配置不同的通道
-        container.addMessageListener(adapter, new PatternTopic(TOPIC_NAME2));
+//        container.addMessageListener(adapter, new PatternTopic(TOPIC_NAME2));
 
         // 监听 "api_sync_channel" 频道
-        container.addMessageListener(receiver, new PatternTopic(TOPIC_NAME));
+//        container.addMessageListener(receiver, new PatternTopic(TOPIC_NAME));
 
         /**
          * 设置序列化对象
@@ -120,18 +116,18 @@ public class RedisConfig {
      * @param printMessageReceiver
      * @return
      */
-    @Bean
-    public MessageListenerAdapter listenerAdapter(PrintMessageReceiver printMessageReceiver) {
-        MessageListenerAdapter receiveMessage = new MessageListenerAdapter(printMessageReceiver, "receiveMessage");
-
-        Jackson2JsonRedisSerializer serial = new Jackson2JsonRedisSerializer(Object.class);
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-        serial.setObjectMapper(objectMapper);
-        receiveMessage.setSerializer(serial);
-        return receiveMessage;
-    }
+//    @Bean
+//    public MessageListenerAdapter listenerAdapter() {
+////        MessageListenerAdapter receiveMessage = new MessageListenerAdapter(printMessageReceiver, "receiveMessage");
+////
+////        Jackson2JsonRedisSerializer serial = new Jackson2JsonRedisSerializer(Object.class);
+////        ObjectMapper objectMapper = new ObjectMapper();
+////        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+////        objectMapper.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+////        serial.setObjectMapper(objectMapper);
+////        receiveMessage.setSerializer(serial);
+//        return null;
+//    }
 
 
 }

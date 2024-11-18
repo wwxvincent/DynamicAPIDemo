@@ -84,48 +84,4 @@ public class APIMessageReceiver implements MessageListener {
 
     }
 
-
-//    @Override
-//    public void onMessage(Message message, byte[] pattern) {
-//        try {
-//            // 反序列化消息
-////            RouteSyncMessage routeSyncMessage = objectMapper.readValue(message.getBody(), RouteSyncMessage.class);
-//
-//            String json = new String(message.getBody(), StandardCharsets.UTF_8);
-//            // 反序列化为 RouteSyncMessage 对象
-//            RouteSyncMessage routeSyncMessage = objectMapper.readValue(json, RouteSyncMessage.class);
-//            if (routeSyncMessage != null) {
-//                registerDynamicApi(routeSyncMessage);
-//            }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//
-//    // PUBLISH api_sync_channel "{\"path\":\"/test\", \"method\":\"POST\", \"handler\":\"adapterController\", \"targetMethodName\":\"dynamicApiMethodSQL\"}"
-//    //用这个 在 redis里 发布
-//    private void registerDynamicApi(RouteSyncMessage routeSyncMessage) {
-//        try {
-//            RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-//
-//            // 从DB中获取配置信息，重新绑定API。
-//            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(routeSyncMessage.getPath())
-//                    .methods(RequestMethod.valueOf(routeSyncMessage.getMethod()))
-//                    .build();
-//            bean.registerMapping(requestMappingInfo, routeSyncMessage.getHandler(), AdapterController.class.getDeclaredMethod(routeSyncMessage.getTargetMethodName(), SearchDTO.class, HttpServletRequest.class));
-//            // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
-////            String contextPath = env.getProperty("server.servlet.context-path");
-////            initFlowRules(contextPath +  dynamicAPIMainConfig.getPath());
-//
-//            System.out.println(routeSyncMessage.getPath());
-//            System.out.println(routeSyncMessage.getMethod());
-//            System.out.println(routeSyncMessage.getTargetMethodName());
-//            System.out.println(routeSyncMessage.getHandler());
-////            log.info("<===== load dynamic API: " + dynamicAPIMainConfig.toString());
-//            System.out.println("API 注册成功：" + routeSyncMessage.getPath());
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 }

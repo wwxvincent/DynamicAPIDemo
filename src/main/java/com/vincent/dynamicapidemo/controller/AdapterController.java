@@ -140,64 +140,6 @@ public class AdapterController {
 
     }
 
-//    //targetMethod for create api by table
-//    public ResponseVO dynamicApiMethodTable(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
-//        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
-//        ResponseVO responseVO = new ResponseVO();
-//
-//        Entry entry = null;
-//        try {
-//            entry = SphU.entry(request.getContextPath() + request.getServletPath());
-//            System.out.println("11   业务逻辑被保护");
-//            return jdbcService.getDataFromDiffDBSource(searchDTO, url);
-//        } catch (Exception e) {
-//            responseVO.setMsg(String.valueOf(e));
-//            return responseVO;
-//        } finally {
-//            if (entry != null) {
-//                entry.exit();
-//            }
-//        }
-//    }
-//
-//    //targetMethod for create api by table
-//    public ResponseVO dynamicApiMethodSql(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
-//        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
-//        ResponseVO responseVO = new ResponseVO();
-//        /**
-//         * to do
-//         */
-//        Entry entry = null;
-//        try {
-//            entry = SphU.entry(request.getContextPath() + request.getServletPath());
-//            System.out.println("11   业务逻辑被保护");
-//            return useService.getDataFromDiffDBSource(searchDTO, url);
-//        } catch (Exception e) {
-//            responseVO.setMsg(String.valueOf(e));
-//            return responseVO;
-//        } finally {
-//            if (entry != null) {
-//                entry.exit();
-//            }
-//        }
-//    }
 
-
-
-
-//    @GetMapping("/create2")
-//    public String create2() throws NoSuchMethodException {
-//        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-//        // 无参get方法
-//        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths("/test2")
-//                .params("fileName")
-//                .methods(RequestMethod.GET).build();
-//        bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("myTest2", String.class));
-//        String url= requestMappingInfo.getDirectPaths().toString();
-//        return "success to create and reload createRestApi() "+ url;
-//    }
-//    Object myTest2(@RequestParam("fileName") String value) {
-//        return "this is my param : " + value;
-//    }
 
 }
