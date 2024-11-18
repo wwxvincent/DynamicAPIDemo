@@ -40,9 +40,6 @@ public class AdapterController {
     @Autowired
     private DynamicAPIMainConfigService dynamicAPIMainConfigService;
 
-//    @Autowired
-//    private JDBCService jdbcService;
-
     @Autowired
     private CreateApiService createApiService;
 
@@ -120,6 +117,29 @@ public class AdapterController {
         }
     }
 
+
+        /**
+     * 模拟 往redis里发送topic
+     * 1. 模拟本机发送topic，用ip addr 192.168.10.76
+     * 1. 模拟集群其他服务发送topic，用ip addr 192.168.0.30
+     * @param ipAddr
+     * @param configId
+     * @return
+     */
+    @GetMapping("/redis/test")
+    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
+        // 发布路由同步消息到Redis 频道
+        try {
+            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+
+
+        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
+
+    }
+
 //    //targetMethod for create api by table
 //    public ResponseVO dynamicApiMethodTable(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
 //        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
@@ -163,27 +183,7 @@ public class AdapterController {
 //    }
 
 
-//    /**
-//     * 模拟 往redis里发送topic
-//     * 1. 模拟本机发送topic，用ip addr 192.168.10.76
-//     * 1. 模拟集群其他服务发送topic，用ip addr 192.168.0.30
-//     * @param ipAddr
-//     * @param configId
-//     * @return
-//     */
-//    @GetMapping("/redis/test")
-//    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
-//        // 发布路由同步消息到Redis 频道
-//        try {
-//            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
-//        } catch (Exception e) {
-//            return e.getMessage();
-//        }
-//
-//
-//        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
-//
-//    }
+
 
 //    @GetMapping("/create2")
 //    public String create2() throws NoSuchMethodException {
