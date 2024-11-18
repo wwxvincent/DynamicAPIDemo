@@ -1,323 +1,203 @@
 package com.vincent.dynamicapidemo.controller;
 
-//import com.fasterxml.jackson.databind.util.JSONPObject;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.vincent.dynamicapidemo.entity.DTO.CreateApiDTO;
-import com.vincent.dynamicapidemo.entity.RegisterMapping;
-import com.vincent.dynamicapidemo.entity.RegisterMappingInfo;
-import com.vincent.dynamicapidemo.entity.User;
-import com.vincent.dynamicapidemo.mapper.DynamicSqlMapper;
-import com.vincent.dynamicapidemo.service.RegisterMappingInfoService;
-import com.vincent.dynamicapidemo.service.UserService;
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-//import com.fasterxml.jackson.databind.util.JSONPObject;
+import com.alibaba.csp.sentinel.Entry;
+
+import com.alibaba.csp.sentinel.SphU;
+import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
+import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
+import com.vincent.dynamicapidemo.entity.DTO.ApiConfig;
+import com.vincent.dynamicapidemo.entity.api.DynamicAPIMainConfig;
+import com.vincent.dynamicapidemo.service.*;
+import com.vincent.dynamicapidemo.util.DynamicApiUtil;
+import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.env.Environment;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.method.HandlerMethod;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
+
 /**
  * @Author: Vincent(Wenxuan) Wang
  * @Date: 10/22/24
  * @Description:
  */
+@Slf4j
 @RestController
 public class AdapterController {
 
+    @Autowired
+    private Environment env;
+
     private final WebApplicationContext applicationContext;
 
-    private final List<RegisterMappingInfo> registerMappingInfoList = new ArrayList<>();
+    @Autowired
+    private DynamicAPIMainConfigService dynamicAPIMainConfigService;
 
     @Autowired
-    private UserService userService;
+    private CreateApiService createApiService;
 
     @Autowired
-    private RegisterMappingInfoService registerMappingInfoService;
+    private UseApiService useService;
 
     @Autowired
-    public AdapterController(WebApplicationContext applicationContext) throws NoSuchMethodException {
+    public AdapterController(WebApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
-
     }
+
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @PostConstruct
-    public void init() throws NoSuchMethodException {
+    public void init() {
         loadExistingMappings();
     }
-    private void loadExistingMappings() throws NoSuchMethodException {
+    private void loadExistingMappings() {
         RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
 
-        List<RegisterMappingInfo> existingMappings = registerMappingInfoService.getExistingMappingInfo();
+        List<DynamicAPIMainConfig> existingMappings = dynamicAPIMainConfigService.getExistingMappingInfo();
         if (!existingMappings.isEmpty()) {
-            registerMappingInfoList.addAll(existingMappings);
-            // 遍历所有的映射关系并进行处理
-            for (RegisterMappingInfo registerMappingInfo : registerMappingInfoList) {
+            for (DynamicAPIMainConfig dynamicAPIMainConfig : existingMappings) { // 从DB中获取配置信息，重新绑定API。
+                // 注册动态路由，绑定url和目标方法
+                DynamicApiUtil.create(bean, dynamicAPIMainConfig.getPath(), dynamicAPIMainConfig.getMethod(), dynamicAPIMainConfig.getHandler(), dynamicAPIMainConfig.getTargetMethodName());
+                // 注册sentinel信息
+                // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
+                String sourceName = env.getProperty("server.servlet.context-path") + dynamicAPIMainConfig.getPath();
+                SentinelConfigUtil.initFlowRules(sourceName);
 
-                // method with parameters
-                if (registerMappingInfo.getParams() != null) {
-                    String paramString = registerMappingInfo.getParams();
-                    String[] params = paramString.split(",");
-                    int size = params.length;
-                    // 动态创建参数类型数组
-                    Class<?>[] paramTypes = new Class<?>[size];
-                    // 根据 params 数组中每个参数的类型来设置 paramTypes
-                    // 您可以根据具体的需求来调整
-                    Arrays.fill(paramTypes, String.class);
-                    RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(registerMappingInfo.getPaths())
-                            .methods(registerMappingInfo.getMethods())
-                            .params(params)
-                            .build();
-
-                    bean.registerMapping(requestMappingInfo, registerMappingInfo.getHandler(), AdapterController.class.getDeclaredMethod(registerMappingInfo.getTargetMethodName(), paramTypes));
-                } else {
-                    // method without parameters
-                    RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(registerMappingInfo.getPaths()).methods(registerMappingInfo.getMethods()).build();
-
-                    bean.registerMapping(requestMappingInfo, registerMappingInfo.getHandler(), AdapterController.class.getDeclaredMethod(registerMappingInfo.getTargetMethodName()));
-
-
-                }
+                log.info("<===== load dynamic API: " + dynamicAPIMainConfig.getApiName()+" : " +dynamicAPIMainConfig.getId());
             }
-            System.out.println("Successfully loaded register mappings from database.");
+
+            log.info("Successfully loaded all existing register mappings from database.");
         } else {
-            System.out.println("No register mappings found in the database.");
+            log.info("No register mappings found in the database.");
         }
 
     }
-
-
-    @GetMapping("/index")
-    public String index(@RequestBody CreateApiDTO createApiDTO, HttpServletRequest request) {
-        // 获取完整的请求 URL
-        String fullUrl = request.getRequestURL().toString();
-        System.out.println("Full URL: " + fullUrl);
-
-        return "常规API测试" ;
-    }
-    @GetMapping("/ttt")
-    Object objTest(@RequestParam Object[] params){
-        System.out.println(Arrays.toString(params));
-        return Arrays.toString(params);
-    }
-    @GetMapping("/tttt")
-    Object objTest2(@RequestParam Object... params){
-        System.out.println(Arrays.toString(params));
-        return Arrays.toString(params);
-    }
-
-    @GetMapping("/index2")
-    public List<RegisterMappingInfo> index2() {
-        return registerMappingInfoService.getExistingMappingInfo();
-    }
-
 
     @PostMapping("/api/create")
-    public String create(@RequestBody CreateApiDTO createApiDTO) throws NoSuchMethodException {
-        String type = createApiDTO.getSourceType();
-        String path = createApiDTO.getPath();
-        String method = createApiDTO.getMethod();
-//        String[][] params = createApiDTO.getParams();
-        String sqlStr = createApiDTO.getSql();
-        System.out.println(createApiDTO.toString());
-
-        String targetMethodName;
-        if ("sql".equals(type)) {
-            targetMethodName = "dynamicApiMethodSQL";
-        } else if ("table".equals(type)) {
-            targetMethodName = "dynamicApiMethodTable";
-        } else if ("jar".equals(type)) {
-            targetMethodName = "dynamicApiMethodJar";
-        } else {
-            targetMethodName = "";
-            return "Illegal source type";
+    public String create(@RequestBody ApiConfig apiConfig, HttpServletRequest request)  {
+        // 获取完整的url
+        String url =request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + apiConfig.getPath();
+        if (dynamicAPIMainConfigService.checkExisted(url)) {
+            return "Sorry bro, this url already existed! Change one!";
         }
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        // 无参get方法
 
-        if (createApiDTO.getParams() != null) {
-            String[][] paramsCollection = createApiDTO.getParams();
-            int size = paramsCollection[0].length;
-            // 动态创建参数类型数组
-            Class<?>[] paramTypes = new Class<?>[size];
-            // 根据 params 数组中每个参数的类型来设置 paramTypes
-            // 您可以根据具体的需求来调整
-            String[] params = new String[size];
-            for(int i = 0; i < size; i++) {
-                params[i] = paramsCollection[i][0];
+        // 存入到db，then 执行路由绑定和sentinel其实设置
+        String apiConfigId =  createApiService.saveConfig(apiConfig,"adapterController", url);
+
+        return "success bro, tyr this: " + url + "\n" +"Check it in Redis <==> main config ID: " + apiConfigId;
+
+    }
+
+    public ResponseVO dynamicApiMethod(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
+        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
+        ResponseVO responseVO = new ResponseVO();
+        /**
+         * to do
+         */
+        Entry entry = null;
+        try {
+            entry = SphU.entry(request.getContextPath() + request.getServletPath());
+            System.out.println("11   业务逻辑被保护");
+            return useService.getDataFromDiffDBSource(searchDTO, url);
+        } catch (Exception e) {
+            responseVO.setMsg(String.valueOf(e));
+            return responseVO;
+        } finally {
+            if (entry != null) {
+                entry.exit();
             }
-//            Arrays.fill(params, "params");
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
-                    .methods(RequestMethod.valueOf(method))
-                    .params(params)
-                    .build();
+        }
+    }
 
-            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName, Object[].class));
-        } else {
-            // method without parameters
-            RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
-                    .methods(RequestMethod.valueOf(method))
-                    .build();
 
-            bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod(targetMethodName));
-
+        /**
+     * 模拟 往redis里发送topic
+     * 1. 模拟本机发送topic，用ip addr 192.168.10.76
+     * 1. 模拟集群其他服务发送topic，用ip addr 192.168.0.30
+     * @param ipAddr
+     * @param configId
+     * @return
+     */
+    @GetMapping("/redis/test")
+    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
+        // 发布路由同步消息到Redis 频道
+        try {
+            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
+        } catch (Exception e) {
+            return e.getMessage();
         }
 
-        return "success";
-    }
-    Object dynamicApiMethodSQL(@RequestParam Object... params){
-        System.out.println(Arrays.toString(params));
-        return null;
+
+        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
+
     }
 
-    @GetMapping("/create1")
-    public String create1() throws NoSuchMethodException {
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        // 无参get方法
-        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths("/test1").methods(RequestMethod.GET).build();
-        bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("myTest"));
-        // 创建一个RegisterMapping对象，然后存入到List里去
-        // create a registermappinginfo obj to store this mapping relationship
-        RegisterMappingInfo registerMappingInfo = new RegisterMappingInfo();
-        registerMappingInfo.setPaths("/test1");
-        registerMappingInfo.setMethods(RequestMethod.GET);
-        registerMappingInfo.setHandler("adapterController");
-        registerMappingInfo.setTargetMethodName("myTest");
-        // update it to database
-        registerMappingInfoService.saveMappingInfo(registerMappingInfo);
-
-        return "success to create and reload createRestApi()";
-    }
-    @GetMapping("/create2")
-    public String create2() throws NoSuchMethodException {
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        // 无参get方法
-        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths("/test2")
-                .params("fileName")
-                .methods(RequestMethod.GET).build();
-        bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("myTest2", String.class));
-        String url= requestMappingInfo.getDirectPaths().toString();
-        return "success to create and reload createRestApi() "+ url;
-    }
-    @GetMapping("/create3")
-    public String create3() throws NoSuchMethodException {
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-                // 创建动态注册的信息，包括路径和 HTTP 方法
-        RequestMappingInfo requestMappingInfo = RequestMappingInfo
-                .paths("/test3")
-                .methods(RequestMethod.GET)
-                .build();
-        // 使用 handlerMapping 将新的 URL 映射到 AdapterController 的 myTest 方法
-        bean.registerMapping(requestMappingInfo, "adapterController",
-                AdapterController.class.getDeclaredMethod("myTest"));
-
-        return "success to create and reload createRestApi()";
-    }
-
-    @GetMapping("/create4")
-    public String create4() throws NoSuchMethodException {
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        // 创建动态注册的信息，包括路径和 HTTP 方法
-        RequestMappingInfo requestMappingInfo = RequestMappingInfo
-                .paths("/test4")
-                .params(new String[]{"fileName", "type", "isSort"})
-                .methods(RequestMethod.GET)
-                .build();
-        // 使用 handlerMapping 将新的 URL 映射到 AdapterController 的 myTest 方法
-        bean.registerMapping(requestMappingInfo, "adapterController",
-                AdapterController.class.getDeclaredMethod("myTest3", String.class, String.class, String.class));
-
-        // create a registermappinginfo obj to store this mapping relationship
-        // add it to mapping list for init load when app restart
-        RegisterMappingInfo registerMappingInfo = new RegisterMappingInfo();
-        registerMappingInfo.setPaths("/test4");
-        registerMappingInfo.setParams("fileName,type,isSort");
-        registerMappingInfo.setMethods(RequestMethod.GET);
-        registerMappingInfo.setHandler("adapterController");
-        registerMappingInfo.setTargetMethodName("myTest3");
-//        registerMappingInfoList.add(registerMappingInfo);
-        registerMappingInfoService.saveMappingInfo(registerMappingInfo);
-
-        return  "http://localhost:8092/blog/test4?fileName=hhh&isSort=YYY&type=KKK";
-    }
-    @GetMapping("/create5")
-    public String create5() throws NoSuchMethodException {
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
-        // 创建动态注册的信息，包括路径和 HTTP 方法
-        RequestMappingInfo requestMappingInfo = RequestMappingInfo
-                .paths("/api/users/index")
-                .methods(RequestMethod.GET)
-                .build();
-        // 使用 handlerMapping 将新的 URL 映射到 AdapterController 的 myTest 方法
-        bean.registerMapping(requestMappingInfo, "adapterController",
-                AdapterController.class.getDeclaredMethod("getAllUsers"));
-
-        return  "http://localhost:8092/blog/api/users/index";
-    }
-    public List<User> getAllUsers() {
-        return userService.getAllUsers();
-    }
-    Object myTest3(@RequestParam("fileName") String fileName,
-                   @RequestParam("type") String type,
-                   @RequestParam("isSort") String isSort) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("fileName", fileName);
-        jsonObject.put("type", type);
-        jsonObject.put("isSort", isSort);
-        return "this is test request from test3- values: " +jsonObject.toString();
-    }
-
-    Object myTest() {
-        return "this is test request from myTest1";
-    }
-
-    Object myTest2(@RequestParam("fileName") String value) {
-        return "this is my param : " + value;
-    }
-
-//    public static String serializeAndSave(RegisterMapping registerMapping) {
+//    //targetMethod for create api by table
+//    public ResponseVO dynamicApiMethodTable(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
+//        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
+//        ResponseVO responseVO = new ResponseVO();
+//
+//        Entry entry = null;
 //        try {
-//            // 将 RegisterMapping 对象转换为 JSON 字符串
-//            String jsonString = objectMapper.writeValueAsString(registerMapping);
-//            System.out.println("Serialized JSON: " + jsonString);
-//
-//            // 假设有一个数据库方法 saveToDatabase(String json) 可以保存数据
-////            System.out.println("Serialized JSON String: " + jsonString);
-//
-//            return jsonString;
+//            entry = SphU.entry(request.getContextPath() + request.getServletPath());
+//            System.out.println("11   业务逻辑被保护");
+//            return jdbcService.getDataFromDiffDBSource(searchDTO, url);
 //        } catch (Exception e) {
-//            e.printStackTrace();
-//            return null;
+//            responseVO.setMsg(String.valueOf(e));
+//            return responseVO;
+//        } finally {
+//            if (entry != null) {
+//                entry.exit();
+//            }
 //        }
 //    }
-//    private static void deserialized(String jsonString) {
-//        ObjectMapper objectMapper = new ObjectMapper();
 //
+//    //targetMethod for create api by table
+//    public ResponseVO dynamicApiMethodSql(@RequestBody SearchDTO searchDTO ,HttpServletRequest request) {
+//        String url = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + request.getContextPath() + request.getServletPath();
+//        ResponseVO responseVO = new ResponseVO();
+//        /**
+//         * to do
+//         */
+//        Entry entry = null;
 //        try {
-//            // 从数据库读取的 JSON 字符串
-////            String jsonString = getFromDatabase();
-//
-//
-//            // 反序列化 JSON 字符串为 RegisterMapping 对象
-//            RegisterMapping registerMapping = objectMapper.readValue(jsonString, RegisterMapping.class);
-//
-//            System.out.println("Deserialized RegisterMapping:");
-//            System.out.println("RequestMappingInfo: " + registerMapping.getRequestMappingInfo());
-//            System.out.println("Handler: " + registerMapping.getHandler());
-//            System.out.println("Method: " + registerMapping.getMethod());
-//
+//            entry = SphU.entry(request.getContextPath() + request.getServletPath());
+//            System.out.println("11   业务逻辑被保护");
+//            return useService.getDataFromDiffDBSource(searchDTO, url);
 //        } catch (Exception e) {
-//            e.printStackTrace();
+//            responseVO.setMsg(String.valueOf(e));
+//            return responseVO;
+//        } finally {
+//            if (entry != null) {
+//                entry.exit();
+//            }
 //        }
+//    }
+
+
+
+
+//    @GetMapping("/create2")
+//    public String create2() throws NoSuchMethodException {
+//        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+//        // 无参get方法
+//        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths("/test2")
+//                .params("fileName")
+//                .methods(RequestMethod.GET).build();
+//        bean.registerMapping(requestMappingInfo, "adapterController", AdapterController.class.getDeclaredMethod("myTest2", String.class));
+//        String url= requestMappingInfo.getDirectPaths().toString();
+//        return "success to create and reload createRestApi() "+ url;
+//    }
+//    Object myTest2(@RequestParam("fileName") String value) {
+//        return "this is my param : " + value;
 //    }
 
 }

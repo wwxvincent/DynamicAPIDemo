@@ -4,20 +4,18 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * @Author: Vincent(Wenxuan) Wang
- * @Date: 10/24/24
+ * @Date: 11/8/24
  * @Description:
  */
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateApiDTO {
-
-    String path;
-    String method;
-    String[][] params;
-    String sourceType;
-    String sql;
-
+@Data
+public class MessageDTO implements Serializable {
+    private String data;
+    private String title;
+    private String content;
 }
