@@ -12,6 +12,10 @@ import com.alibaba.druid.sql.parser.SQLStatementParser;
 //import com.sql.sqlflow.druid.parser.prehandle.PreHandleUtil;
 //import com.sql.sqlflow.druid.parser.prehandle.Regex;
 //import com.sql.sqlflow.druid.parser.vo.*;
+import com.alibaba.druid.wall.Violation;
+import com.alibaba.druid.wall.WallCheckResult;
+import com.alibaba.druid.wall.WallProvider;
+import com.alibaba.druid.wall.spi.MySqlWallProvider;
 import com.vincent.dynamicapidemo.entity.VO.SQL.BloodRelationVO;
 import com.vincent.dynamicapidemo.entity.VO.SQL.BloodTableRelationVO;
 import com.vincent.dynamicapidemo.entity.VO.SQL.ItemVO;
@@ -1131,5 +1135,59 @@ public class SQLParserProcessor {
             tableType = "实体表";
         }
         return tableType;
+    }
+
+    public static <WallProviderStat> void main(String[] args) {
+
+//        String sql = "SELECT APPROX_COUNT_DISTINCT(user_id) AS user_count FROM user_activity";
+//        String sql = "SELECt\n" +
+//                "    o.user_id,\n" +
+//                "    u.user_name,\n" +
+//                "    SUM(o.quantity) AS total_quantity,\n" +
+//                "    SUM(o.amount) AS total_amount,\n" +
+//                "    MAX(o.order_date) AS last_order_date\n" +
+//                "FRO\n" +
+//                "    orders o\n" +
+//                "JOIN\n" +
+//                "    users u ON o.user_id = u.user_id\n" +
+//                "GROUP BY\n" +
+//                "    o.user_id, u.user_name;";
+
+        String sql = "SELECT A.ID, A.NAME, B.DEPARTMENT, C.SALARY\n" +
+                "FROM EMPLOYEE A\n" +
+                "LEFT JOIN DEPARTMENTS B ON A.DEPARMENT_ID = B.ID\n" +
+                "WHERE A.ID IN (\n" +
+                "    SELECT EMPLOYEE_ID\n" +
+                "    FROM SALARIES\n" +
+                "    WHERE AMOUNT > 50000\n" +
+                "    AND DEPARMENT_ID = \n" +
+                "        SELECT ID\n" +
+                "        FROM DEPARTMENTS\n" +
+                "        WHERE NAME = 'Engineering'\n" +
+                "    )\n" +
+                ")\n" +
+                "ORDER BY A.NAME ASC\n" +
+                "LIMIT 10";
+        //String sql = "call aa('bbb')";
+
+        // 创建 WallProvider 实例，指定数据库类型为 MySQL
+        WallProvider provider = new MySqlWallProvider();
+
+        WallCheckResult result = provider.check(sql);
+
+        if(result.isSyntaxError()){
+            System.out.println("SQL 语法错误: " + sql);
+            System.out.println("错误信息: " + result.getSqlStat());
+            List<Violation> errorList = result.getViolations();
+            for(Violation error:errorList){
+                System.out.println(error.getErrorCode());
+                System.out.println(error.getMessage());
+            }
+        }else{
+            System.out.println("SQL 语法正确: " + sql);
+
+
+        }
+
     }
 }
