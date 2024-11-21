@@ -1,5 +1,7 @@
 package com.vincent.dynamicapidemo.util;
 
+import com.alibaba.druid.DbType;
+import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLExpr;
 import com.alibaba.druid.sql.ast.SQLObject;
 import com.alibaba.druid.sql.ast.SQLStatement;
@@ -7,11 +9,14 @@ import com.alibaba.druid.sql.ast.expr.*;
 import com.alibaba.druid.sql.ast.statement.*;
 import com.alibaba.druid.sql.dialect.hive.parser.HiveStatementParser;
 import com.alibaba.druid.sql.dialect.hive.stmt.HiveCreateTableStatement;
+import com.alibaba.druid.sql.dialect.mysql.visitor.MySqlSchemaStatVisitor;
 import com.alibaba.druid.sql.parser.SQLStatementParser;
 //import com.sql.sqlflow.SqlFlowApplication;
 //import com.sql.sqlflow.druid.parser.prehandle.PreHandleUtil;
 //import com.sql.sqlflow.druid.parser.prehandle.Regex;
 //import com.sql.sqlflow.druid.parser.vo.*;
+import com.alibaba.druid.stat.TableStat;
+import com.alibaba.druid.util.JdbcConstants;
 import com.alibaba.druid.wall.Violation;
 import com.alibaba.druid.wall.WallCheckResult;
 import com.alibaba.druid.wall.WallProvider;
@@ -22,6 +27,7 @@ import com.vincent.dynamicapidemo.entity.VO.SQL.ItemVO;
 import com.vincent.dynamicapidemo.entity.VO.SQL.TableVO;
 //import org.apache.commons.lang3.StringUtils;
 //import org.apache.commons.lang3.time.StopWatch;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
@@ -32,6 +38,7 @@ import java.util.*;
  * @Date: 11/7/24
  */
 @Component
+@Slf4j
 public class SQLParserProcessor {
 
     public List<BloodTableRelationVO> process(String sql, String dbType, List<BloodTableRelationVO> bloodTableRelationList) {
@@ -1137,6 +1144,41 @@ public class SQLParserProcessor {
         return tableType;
     }
 
+    public static String getTable(String sql, String type) {
+        DbType dbType = null;
+        switch (type.toUpperCase()) {
+            case "MYSQL": dbType = JdbcConstants.MYSQL; break;
+            case "ORACLE": dbType = JdbcConstants.ORACLE; break;
+            case "POSTGRESQL": dbType = JdbcConstants.POSTGRESQL; break;
+            case "HIVE": dbType = JdbcConstants.HIVE; break;
+            // add more if need
+            default: log.error("Unsupported database type: {}", type); return "Unsupported database type: " + type;
+        }
+        // 解析 SQL 语句
+        List<SQLStatement> stmtList = SQLUtils.parseStatements(sql, dbType);
+        StringBuilder sb = new StringBuilder();
+        for (SQLStatement stmt : stmtList) {
+            // 创建 SchemaStatVisitor 对象
+            MySqlSchemaStatVisitor visitor = new MySqlSchemaStatVisitor();
+            // 遍历 SQL 语句
+            stmt.accept(visitor);
+//            sb.append("Tables: " + visitor.getTables() + "\n");
+//            sb.append("size: " + visitor.getTables().size() + "\n\n");
+
+            // 获取表名
+            visitor.getTables().forEach((key, value) -> {
+//                System.out.print("Table Name: " + key.getName());
+//                System.out.println(" ====> Table Stats: " + value);
+                sb.append("Table Name: ").append(key.getName());
+                sb.append(" ====> Table Stats: ").append(value).append("\n");
+            });
+//            System.out.println("Table Number: " + visitor.getTables().size());
+            sb.append("Table Number: ").append(visitor.getTables().size());
+
+        }
+        return sb.toString();
+    }
+
     public static <WallProviderStat> void main(String[] args) {
 
 //        String sql = "SELECT APPROX_COUNT_DISTINCT(user_id) AS user_count FROM user_activity";
@@ -1160,7 +1202,7 @@ public class SQLParserProcessor {
                 "    SELECT EMPLOYEE_ID\n" +
                 "    FROM SALARIES\n" +
                 "    WHERE AMOUNT > 50000\n" +
-                "    AND DEPARMENT_ID = \n" +
+                "    AD DEPARMENT_ID = (\n" +
                 "        SELECT ID\n" +
                 "        FROM DEPARTMENTS\n" +
                 "        WHERE NAME = 'Engineering'\n" +
@@ -1168,7 +1210,7 @@ public class SQLParserProcessor {
                 ")\n" +
                 "ORDER BY A.NAME ASC\n" +
                 "LIMIT 10";
-        //String sql = "call aa('bbb')";
+
 
         // 创建 WallProvider 实例，指定数据库类型为 MySQL
         WallProvider provider = new MySqlWallProvider();
@@ -1176,7 +1218,7 @@ public class SQLParserProcessor {
         WallCheckResult result = provider.check(sql);
 
         if(result.isSyntaxError()){
-            System.out.println("SQL 语法错误: " + sql);
+            System.out.println("SQL 语法错误: \n" + sql);
             System.out.println("错误信息: " + result.getSqlStat());
             List<Violation> errorList = result.getViolations();
             for(Violation error:errorList){
@@ -1184,7 +1226,9 @@ public class SQLParserProcessor {
                 System.out.println(error.getMessage());
             }
         }else{
-            System.out.println("SQL 语法正确: " + sql);
+            System.out.println("SQL 语法正确: ");
+            String str = getTable(sql, "mysql");
+            System.out.println(str);
 
 
         }
