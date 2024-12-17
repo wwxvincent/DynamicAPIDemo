@@ -1,7 +1,7 @@
 package com.vincent.dynamicapidemo.util;
 
 import com.alibaba.fastjson.JSONObject;
-import com.vincent.dynamicapidemo.entity.VO.ResponseVO;
+import com.vincent.dynamicapidemo.dynamicApi.entity.VO.ResponseVO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.sql.*;

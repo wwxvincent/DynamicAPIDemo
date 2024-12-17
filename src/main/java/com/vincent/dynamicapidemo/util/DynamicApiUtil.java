@@ -1,9 +1,7 @@
 package com.vincent.dynamicapidemo.util;
 
-import com.vincent.dynamicapidemo.controller.AdapterController;
-import com.vincent.dynamicapidemo.entity.DTO.SearchDTO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import com.vincent.dynamicapidemo.dynamicApi.controller.AdapterController;
+import com.vincent.dynamicapidemo.dynamicApi.entity.DTO.SearchDTO;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -14,8 +12,6 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
-
-import static com.vincent.dynamicapidemo.util.SentinelConfigUtil.initFlowRules;
 
 /**
  * @Author: Vincent(Wenxuan) Wang

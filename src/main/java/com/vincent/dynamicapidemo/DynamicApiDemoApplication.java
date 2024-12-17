@@ -1,11 +1,9 @@
 package com.vincent.dynamicapidemo;
 
-import com.vincent.dynamicapidemo.controller.AdapterController;
+import com.vincent.dynamicapidemo.dynamicApi.controller.AdapterController;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ApplicationContext;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @SpringBootApplication

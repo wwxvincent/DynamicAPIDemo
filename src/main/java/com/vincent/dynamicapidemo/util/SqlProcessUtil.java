@@ -1,7 +1,7 @@
 package com.vincent.dynamicapidemo.util;
 
-import com.vincent.dynamicapidemo.entity.DTO.Param;
-import com.vincent.dynamicapidemo.entity.api.DynamicAPIParamsConfig;
+import com.vincent.dynamicapidemo.dynamicApi.entity.DTO.Param;
+import com.vincent.dynamicapidemo.dynamicApi.entity.api.DynamicAPIParamsConfig;
 
 import java.util.*;
 
