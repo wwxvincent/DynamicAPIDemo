@@ -20,4 +20,7 @@ public class SearchDTO {
 
 
     private List<String>selectList;
+
+    // 模拟不同的线程访问不同的api，所需时间不同
+    private int sleepTime;
 }
