@@ -110,18 +110,37 @@ public class JDBCUtil {
                 columns.add(result.getMetaData().getColumnName(i));
             }
             List<JSONObject> list = new ArrayList<>();
-            while (result.next()) {
-                JSONObject object = new JSONObject();
-                columns.stream().forEach(column -> {
-                    try {
-                        Object value = result.getObject(column);
-                        object.put(column, value);
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                });
-                list.add(object);
+//            while (result.next()) {
+//                JSONObject object = new JSONObject();
+//                columns.stream().forEach(column -> {
+//                    try {
+//                        Object value = result.getObject(column);
+//                        object.put(column, value);
+//                    } catch (SQLException e) {
+//                        e.printStackTrace();
+//                    }
+//                });
+//                list.add(object);
+//            }
+            // 替换成会循环读取的，适用于存储过程返回结果集的
+            boolean hasResults = preparedStatement.execute();
+            while (hasResults) {
+                ResultSet rs = preparedStatement.getResultSet();
+                while (rs.next()) {
+                    JSONObject object = new JSONObject();
+                    columns.stream().forEach(column -> {
+                        try {
+                            Object value = rs.getObject(column);
+                            object.put(column, value);
+                        } catch (SQLException e) {
+                            e.printStackTrace();
+                        }
+                    });
+                    list.add(object);
+                }
+                hasResults = preparedStatement.getMoreResults();
             }
+// end part
             return ResponseVO.apiSuccess(list);
         } catch (SQLException e) {
             e.printStackTrace();
