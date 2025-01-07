@@ -35,10 +35,10 @@ public class DynamicApiServiceImpl implements DynamicApiService {
         dynamicAPIMainConfigService.loadExistingMappings();
     }
 
-    @Override
-    public List<DynamicAPIMainConfig> getExistingMappingInfo() {
-        return dynamicAPIMainConfigService.getExistingMappingInfo();
-    }
+//    @Override
+//    public List<DynamicAPIMainConfig> getExistingMappingInfo() {
+//        return dynamicAPIMainConfigService.getExistingMappingInfo();
+//    }
 
     @Override
     public boolean checkExisted(String url) {

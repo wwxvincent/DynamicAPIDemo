@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -90,7 +91,7 @@ public class RedisConfig {
 //        container.addMessageListener(adapter, new PatternTopic(TOPIC_NAME2));
 
         // 监听 "api_sync_channel" 频道
-//        container.addMessageListener(receiver, new PatternTopic(TOPIC_NAME));
+        container.addMessageListener(receiver, new PatternTopic(TOPIC_NAME));
 
         /**
          * 设置序列化对象

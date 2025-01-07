@@ -15,7 +15,7 @@ import java.util.List;
 public interface DynamicApiService {
     void loadExistingMappings();
 
-    List<DynamicAPIMainConfig> getExistingMappingInfo();
+//    List<DynamicAPIMainConfig> getExistingMappingInfo();
 
     boolean checkExisted(String url);
 

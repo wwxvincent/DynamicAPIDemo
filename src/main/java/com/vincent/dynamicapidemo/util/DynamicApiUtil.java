@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -16,6 +17,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.Map;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
@@ -35,11 +37,17 @@ public class DynamicApiUtil {
     /**
      * @Description: 创建动态API，注册动态路由，绑定给定的url和制定的调用方法
      */
-    public  boolean create (String path, String method, String handler, String targetMethodName) {
+    public boolean create (String path, String method, String handler, String targetMethodName) {
 
         try {
             // 从DB中获取配置信息，重新绑定API。
             RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+            // check it, Do not duplicate register same URL&Method in Spring MVC
+            Map<RequestMappingInfo, HandlerMethod> handlerMethods = bean.getHandlerMethods();
+            boolean isExisted = handlerMethods.keySet().stream()
+                    .anyMatch(info -> info.getPatternsCondition().getPatterns().contains(path)
+                            && info.getMethodsCondition().getMethods().contains(RequestMethod.valueOf(method)));
+            if(isExisted){return false;}
             RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(path)
                     .methods(RequestMethod.valueOf(method))
                     .build();
@@ -50,6 +58,9 @@ public class DynamicApiUtil {
             throw new RuntimeException(e);
         }
     }
+
+
+
 
     /**
      *

@@ -9,6 +9,7 @@ import com.vincent.dynamicapidemo.dynamicApi.entity.DTO.ApiConfig;
 import com.vincent.dynamicapidemo.dynamicApi.service.DynamicApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.web.bind.annotation.*;
 
@@ -123,6 +124,9 @@ public class AdapterController {
      * @param configId
      * @return
      */
+//        @Autowired
+//        private RedisTemplate<String, Object> redisTemplate;
+//
 //    @GetMapping("/redis/test")
 //    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
 //        // 发布路由同步消息到Redis 频道
