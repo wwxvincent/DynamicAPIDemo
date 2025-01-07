@@ -3,6 +3,8 @@ package com.vincent.dynamicapidemo.util;
 import com.alibaba.csp.sentinel.slots.block.RuleConstant;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
+import org.springframework.beans.factory.annotation.Value;
+
 
 import java.util.List;
 
@@ -12,9 +14,16 @@ import java.util.List;
  * @Description:
  */
 public class SentinelConfigUtil {
+    @Value("${server.servlet.context-path}")
+    private static String contextPath;
+
+    public SentinelConfigUtil(String contextPath) {
+        SentinelConfigUtil.contextPath = contextPath;
+    }
 
     // 配置sentinel中的限流降级默认配置
     public static void initFlowRules(String resourceName) {
+        resourceName = contextPath + resourceName;
         List<FlowRule> rules = FlowRuleManager.getRules();
         FlowRule rule = new FlowRule();
         rule.setResource(resourceName);

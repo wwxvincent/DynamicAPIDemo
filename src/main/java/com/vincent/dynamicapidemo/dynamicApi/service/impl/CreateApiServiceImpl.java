@@ -8,12 +8,9 @@ import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.env.Environment;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
@@ -23,19 +20,16 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  */
 @Slf4j
 @Service
-public class CreateApiServiceImplNew implements CreateApiService {
+public class CreateApiServiceImpl implements CreateApiService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
     @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private Environment env;
-
-    @Autowired
     private ApiFactory apiFactory;
+
+    @Autowired
+    private DynamicApiUtil dynamicApiUtil;
 
     @Transactional(rollbackFor = Exception.class)
     @Override
@@ -49,13 +43,13 @@ public class CreateApiServiceImplNew implements CreateApiService {
         /**
          * 存储完 数据库，注册动态路由 和
          */
-        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
         // 注册动态路由，绑定url和目标方法
-        DynamicApiUtil.create(bean, apiConfig.getPath(), apiConfig.getMethod(), "adapterController",targetMethodName);
+        dynamicApiUtil.create(apiConfig.getPath(), apiConfig.getMethod(), "adapterController",targetMethodName);
         // 注册sentinel信息
         // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
-        String sourceName = env.getProperty("server.servlet.context-path") + apiConfig.getPath();
-        SentinelConfigUtil.initFlowRules(sourceName);
+//        String sourceName = env.getProperty("server.servlet.context-path") + apiConfig.getPath();
+//        SentinelConfigUtil.initFlowRules(sourceName);
+        SentinelConfigUtil.initFlowRules(apiConfig.getPath());
         // 组装传到redis中的topic
         String message = DynamicApiUtil.getIpAddr() + ":";
         message = message + apiConfigId;

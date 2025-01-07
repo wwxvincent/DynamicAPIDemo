@@ -7,12 +7,9 @@ import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.core.env.Environment;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -29,15 +26,10 @@ import java.util.Objects;
 public class APIMessageReceiver implements MessageListener {
 
     @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private Environment env;
-
-    @Autowired
     private DynamicAPIMainConfigMapper dynamicAPIMainConfigMapper;
 
-
+    @Autowired
+    private DynamicApiUtil dynamicApiUtil;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -63,14 +55,14 @@ public class APIMessageReceiver implements MessageListener {
                     log.debug("Invalid dynamic api config ID from redis message");
                     throw new RuntimeException("Invalid dynamic api config ID from redis message, do not exist in database");
                 }
-                RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
 
                 // 从DB中获取配置信息，重新绑定API。
-                DynamicApiUtil.create(bean, dynamicAPIMainConfig.getPath(), dynamicAPIMainConfig.getMethod(), dynamicAPIMainConfig.getHandler(), dynamicAPIMainConfig.getTargetMethodName());
+                dynamicApiUtil.create( dynamicAPIMainConfig.getPath(), dynamicAPIMainConfig.getMethod(), dynamicAPIMainConfig.getHandler(), dynamicAPIMainConfig.getTargetMethodName());
                 // 注册sentinel信息
                 // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
-                String sourceName = env.getProperty("server.servlet.context-path") + dynamicAPIMainConfig.getPath();
-                SentinelConfigUtil.initFlowRules(sourceName);
+//                String sourceName = env.getProperty("server.servlet.context-path") + dynamicAPIMainConfig.getPath();
+//                SentinelConfigUtil.initFlowRules(sourceName);
+                SentinelConfigUtil.initFlowRules(dynamicAPIMainConfig.getPath());
 
                 log.info("<===== load dynamic API From Redis topic : " + dynamicAPIMainConfig.toString());
             } else { // test, 成功后删掉else

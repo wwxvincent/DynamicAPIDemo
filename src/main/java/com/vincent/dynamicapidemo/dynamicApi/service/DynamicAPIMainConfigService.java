@@ -13,4 +13,6 @@ public interface DynamicAPIMainConfigService {
     List<DynamicAPIMainConfig> getExistingMappingInfo();
 
     boolean checkExisted(String url);
+
+    void loadExistingMappings();
 }
