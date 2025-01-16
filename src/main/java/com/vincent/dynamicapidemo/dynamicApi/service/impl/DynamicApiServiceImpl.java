@@ -8,7 +8,9 @@ import com.vincent.dynamicapidemo.dynamicApi.service.CreateApiService;
 import com.vincent.dynamicapidemo.dynamicApi.service.DynamicAPIMainConfigService;
 import com.vincent.dynamicapidemo.dynamicApi.service.DynamicApiService;
 import com.vincent.dynamicapidemo.dynamicApi.service.UseApiService;
+import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -29,6 +31,8 @@ public class DynamicApiServiceImpl implements DynamicApiService {
     @Autowired
     private UseApiService useApiService;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
     @Override
     public void loadExistingMappings() {
@@ -53,5 +57,15 @@ public class DynamicApiServiceImpl implements DynamicApiService {
     @Override
     public ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO, String url) {
         return useApiService.getDataFromDiffDBSource(searchDTO, url);
+    }
+
+    @Override
+    public boolean destroy(String id) {
+        boolean flag = dynamicAPIMainConfigService.destroy(id);
+        if(flag){
+            String message = DynamicApiUtil.getIpAddr() + ":" + id + ":" + "DESTROY";
+            redisTemplate.convertAndSend("api_sync_channel", message);
+        }
+        return flag;
     }
 }

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @Author: Vincent(Wenxuan) Wang
@@ -32,5 +33,18 @@ public class SentinelConfigUtil {
         rule.setCount(1);
         rules.add(rule);
         FlowRuleManager.loadRules(rules);
+    }
+
+    public static void removeFlowRules(String resourceName) {
+        resourceName = contextPath + resourceName;
+        // 获取当前所有的限流规则
+        List<FlowRule> oldRules = FlowRuleManager.getRules();
+        // 过滤掉不需要的规则（即资源名为resourceName的规则）
+        String finalResourceName = resourceName;
+        List<FlowRule> newRules = oldRules.stream()
+                .filter(rule -> !rule.getResource().equals(finalResourceName))
+                .collect(Collectors.toList());
+        // 重新加载规则
+        FlowRuleManager.loadRules(newRules);
     }
 }

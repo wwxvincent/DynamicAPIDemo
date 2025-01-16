@@ -2,6 +2,7 @@ package com.vincent.dynamicapidemo.util;
 
 import com.vincent.dynamicapidemo.dynamicApi.controller.AdapterController;
 import com.vincent.dynamicapidemo.dynamicApi.entity.DTO.SearchDTO;
+import com.vincent.dynamicapidemo.dynamicApi.entity.api.DynamicAPIMainConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -57,6 +58,22 @@ public class DynamicApiUtil {
         } catch (NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public boolean destroy(DynamicAPIMainConfig dynamicAPIMainConfig) {
+        // 从DB中获取配置信息，重新绑定API。
+        RequestMappingHandlerMapping bean = applicationContext.getBean(RequestMappingHandlerMapping.class);
+        // check it, Do not duplicate register same URL&Method in Spring MVC
+        Map<RequestMappingInfo, HandlerMethod> handlerMethods = bean.getHandlerMethods();
+        boolean isExisted = handlerMethods.keySet().stream()
+                .anyMatch(info -> info.getPatternsCondition().getPatterns().contains(dynamicAPIMainConfig.getPath())
+                        && info.getMethodsCondition().getMethods().contains(RequestMethod.valueOf(dynamicAPIMainConfig.getMethod())));
+        if(!isExisted){return false;}
+        RequestMappingInfo requestMappingInfo = RequestMappingInfo.paths(dynamicAPIMainConfig.getPath())
+                .methods(RequestMethod.valueOf(dynamicAPIMainConfig.getMethod()))
+                .build();
+        bean.unregisterMapping(requestMappingInfo);
+        return true;
     }
 
 

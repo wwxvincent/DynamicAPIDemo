@@ -38,11 +38,12 @@ public class APIMessageReceiver implements MessageListener {
             String messageBody = new String(message.getBody(), StandardCharsets.UTF_8);
             if (messageBody.startsWith("\"") && messageBody.endsWith("\"")) {
                 messageBody = messageBody.substring(1, messageBody.length() - 1);
-            }            String[] parts = messageBody.split(":", 2);
+            }            String[] parts = messageBody.split(":");
             String messageId = "";
             log.debug("###### Redis info ###### ip address from Redis topic: "+parts[0]);
             log.debug("###### Redis info ###### ip addr for local machine: "+ DynamicApiUtil.getIpAddr());
             log.debug("###### Redis info ###### message of this message: "+parts[1]);
+            log.debug("###### Redis info ###### action of this message: "+parts[2]);
             if (!Objects.equals(DynamicApiUtil.getIpAddr(), parts[0])) {
                 try {
                     messageId = parts[1];
@@ -56,13 +57,20 @@ public class APIMessageReceiver implements MessageListener {
                     throw new RuntimeException("Invalid dynamic api config ID from redis message, do not exist in database");
                 }
 
-                // 从DB中获取配置信息，重新绑定API。
-                dynamicApiUtil.create( dynamicAPIMainConfig.getPath(), dynamicAPIMainConfig.getMethod(), dynamicAPIMainConfig.getHandler(), dynamicAPIMainConfig.getTargetMethodName());
-                // 注册sentinel信息
-                // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
+                if (parts[2].equalsIgnoreCase("CREATE")) {
+                    // 从DB中获取配置信息，重新绑定API。
+                    dynamicApiUtil.create( dynamicAPIMainConfig.getPath(), dynamicAPIMainConfig.getMethod(), dynamicAPIMainConfig.getHandler(), dynamicAPIMainConfig.getTargetMethodName());
+                    // 注册sentinel信息
+                    // 获取path组装资源名字，重新配置sentinel中的限流降级默认配置
 //                String sourceName = env.getProperty("server.servlet.context-path") + dynamicAPIMainConfig.getPath();
 //                SentinelConfigUtil.initFlowRules(sourceName);
-                SentinelConfigUtil.initFlowRules(dynamicAPIMainConfig.getPath());
+                    SentinelConfigUtil.initFlowRules(dynamicAPIMainConfig.getPath());
+                }
+                if (parts[2].equalsIgnoreCase("DESTROY")) {
+                    dynamicApiUtil.destroy( dynamicAPIMainConfig);
+                    SentinelConfigUtil.removeFlowRules(dynamicAPIMainConfig.getPath());
+                }
+
 
                 log.info("<===== load dynamic API From Redis topic : " + dynamicAPIMainConfig.toString());
             } else { // test, 成功后删掉else

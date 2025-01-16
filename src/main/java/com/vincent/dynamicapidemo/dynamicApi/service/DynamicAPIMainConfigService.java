@@ -15,4 +15,6 @@ public interface DynamicAPIMainConfigService {
     boolean checkExisted(String url);
 
     void loadExistingMappings();
+
+    boolean destroy(String id);
 }

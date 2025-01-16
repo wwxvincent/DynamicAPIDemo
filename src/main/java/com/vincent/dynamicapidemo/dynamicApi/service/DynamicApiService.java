@@ -22,4 +22,6 @@ public interface DynamicApiService {
     String saveConfig(ApiConfig apiConfig, String handler, String url);
 
     ResponseVO getDataFromDiffDBSource(SearchDTO searchDTO, String url);
+
+    boolean destroy(String id);
 }

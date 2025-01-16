@@ -15,7 +15,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("dynamic_API_main_config")
+@TableName("dynamic_api_main_config")
 public class DynamicAPIMainConfig {
     @TableId(type = IdType.AUTO)
     private String id; // 假设 ID 类型是 Integer

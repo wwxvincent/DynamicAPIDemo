@@ -59,6 +59,10 @@ public class AdapterController {
 
 
     }
+    @PostMapping("/api/destroy")
+    public boolean destroy(@RequestParam String id) {
+        return dynamicApiService.destroy(id);
+    }
 
     @Async
     public CompletableFuture<ResponseVO> dynamicApiMethod(@RequestBody SearchDTO searchDTO , HttpServletRequest request) {
@@ -124,22 +128,22 @@ public class AdapterController {
      * @param configId
      * @return
      */
-//        @Autowired
-//        private RedisTemplate<String, Object> redisTemplate;
-//
-//    @GetMapping("/redis/test")
-//    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId) {
-//        // 发布路由同步消息到Redis 频道
-//        try {
-//            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId);
-//        } catch (Exception e) {
-//            return e.getMessage();
-//        }
-//
-//
-//        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
-//
-//    }
+        @Autowired
+        private RedisTemplate<String, Object> redisTemplate;
+
+    @GetMapping("/redis/test")
+    public String testRedis(@RequestParam String ipAddr, @RequestParam String configId, @RequestParam String action) {
+        // 发布路由同步消息到Redis 频道
+        try {
+            redisTemplate.convertAndSend("api_sync_channel", ipAddr+":"+configId+":"+action);
+        } catch (Exception e) {
+            return e.getMessage();
+        }
+
+
+        return "Simulating of publisher creation of An API, and then send info to redis\nsuccess. Go have a try, bro!";
+
+    }
 
     //模拟call存储过程
 //    @GetMapping("/callFetch")

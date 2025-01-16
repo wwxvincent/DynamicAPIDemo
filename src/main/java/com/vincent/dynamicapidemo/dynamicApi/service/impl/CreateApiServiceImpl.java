@@ -52,7 +52,7 @@ public class CreateApiServiceImpl implements CreateApiService {
         SentinelConfigUtil.initFlowRules(apiConfig.getPath());
         // 组装传到redis中的topic
         String message = DynamicApiUtil.getIpAddr() + ":";
-        message = message + apiConfigId;
+        message = message + apiConfigId + ":" + "CREATE";
         redisTemplate.convertAndSend("api_sync_channel", message);
 
         return apiConfigId;

@@ -8,6 +8,7 @@ import com.vincent.dynamicapidemo.util.DynamicApiUtil;
 import com.vincent.dynamicapidemo.util.SentinelConfigUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,6 +28,8 @@ public class DynamicAPIMainConfigServiceImpl implements DynamicAPIMainConfigServ
     @Autowired
     private DynamicApiUtil dynamicApiUtil;
 
+    @Autowired
+    private RedisTemplate<String, Object> redisTemplate;
 
 
     @Override
@@ -64,5 +67,13 @@ public class DynamicAPIMainConfigServiceImpl implements DynamicAPIMainConfigServ
         } else {
             log.info("No register mappings found in the database.");
         }
+    }
+
+    @Override
+    public boolean destroy(String id) {
+        QueryWrapper<DynamicAPIMainConfig> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("id",id );
+        DynamicAPIMainConfig dynamicAPIMainConfig = dynamicAPIMainConfigMapper.selectOne(queryWrapper);
+        return dynamicApiUtil.destroy(dynamicAPIMainConfig);
     }
 }
